@@ -18,3 +18,5 @@
 525030100891205642=Furious Flames;Phobos;Heat Wave
 525033780868808704=Mystic
 503451119020670977=Audio Expulsion
+526253253533368340=The Hell Factory;A Bizarre Phantasm;Artificial Ideology
+527278737679581184=Red World Rebirth;Bloodbath;Quantum Processing

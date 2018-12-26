@@ -185,6 +185,32 @@ def strtolist(s):
         if t.startswith(" "): st[st.index(t)] = t[1:]
     return st
 
+def strtolod(s) -> list:
+    global DEMONSLIST
+    # [{'n':d,'p':d},{'n':d,'p':d}]
+    if s[0] != "[": st = str(s).split("="); st = st[1]
+    else: st = s
+    st = st.replace("[",""); st = st.replace("]",""); st = st.split("},")
+    for t in st:
+        sti = t + "}"
+        if sti.startswith(" "): sti = sti[1:]
+        if sti[len(sti) - 2:] == "}}": sti = sti[:len(sti) - 1]
+        sti = ast.literal_eval(sti)
+        try: sti['position'] = int(sti['position'])
+        except: pass
+        try: sti['old pos'] = int(sti['old pos'])
+        except: pass
+        try: sti['new pos'] = int(sti['new pos'])
+        except: pass
+        try: sti['dif'] = int(sti['dif'])
+        except: pass
+        try: sti['points'] = int(sti['points'])
+        except: pass
+        try: sti['id'] = int(sti['id'])
+        except: pass
+        st[st.index(t)] = sti
+    return st
+
 def paramquotationlist(p):
     params = []
     while True:
@@ -305,6 +331,38 @@ def playersfix():
         return pdf
 
 
+def logpoints(pid,np):
+    lpp = datasettings(file="pcpoints.txt",method="get",line=str(pid) + "PID")
+    if lpp is None: datasettings(file="pcpoints.txt",method="add",newkey=str(pid) + "PID",newvalue=str([{'id':1,'points':np}]))
+    else:
+        lpp = strtolod(lpp)
+        lplid = 0
+        for l in lpp:
+            if int(l['id']) >= lplid: lplid = int(l['id'])
+        for l in lpp:
+            if int(l['id']) == lplid:
+                if str(l['points']) == str(np): return
+        lpp.append({'id':lplid + 1,'points':np})
+        datasettings(file="pcpoints.txt",method="change",line=str(pid) + "PID",newvalue=str(lpp))
+
+def loggedpointschange(pid,mn=0):
+    lpp = datasettings(file="pcpoints.txt", method="get", line=str(pid) + "PID")
+    if lpp is None: return None
+    lpp = strtolod(lpp)
+    lplid = 0
+    for l in lpp:
+        if int(l['id']) >= lplid: lplid = int(l['id'])
+    lplid -= mn
+    if lplid == 1: return {'id':1,'old':lpp[0]['points'],'dif':lpp[0]['points']}
+    lpnew = 0; lpold = 0
+    for l in lpp:
+        if l['id'] == lplid: lpnew = l['points']
+        if l['id'] == lplid - 1: lpold = l['points']
+    lpdif = lpnew - lpold
+    return {'id':lplid,'old':lpold,'dif':lpdif}
+
+
+
 def PLAYERDATA(id):
     if id is None: return None
     url = "https://pointercrate.com/api/v1/players/" + str(id)
@@ -345,18 +403,7 @@ def DEMONSLISTREFRESH():
     for d2 in rj2: DEMONSLIST.append(d2)
     print("[Demons List] Top 100 Demons refreshed")
 
-"""
-TEXT FILE STORING
 
-====pcdata.txt=====
-DISCORDUSERID=PLAYERID
-===pcmods.txt======
-MODERATOR GUILDID=ROLEID
-====pcproles.txt===
-DISCORDROLEID=POINTS
-====pcdroles.txt===
-DISCORDROLE=DEMON1;DEMON2
-"""
 
 @client.event
 async def on_ready():
@@ -883,7 +930,7 @@ async def on_message(message):
                             if player is None: continue
                             playerdata = PLAYERDATA(
                                 datasettings(file="pcdata.txt", method="get", line=playerid))
-                            # Points Roles
+                            # Points Roles & Log Points
                             for proleid in alldatakeys("pcproles.txt"):
                                 prole = getrole(message.channel.guild, proleid)
                                 if prole is not None:
@@ -902,6 +949,8 @@ async def on_message(message):
                                             prolepoints = int(prolepoints)
                                             try: playerpoints = int(POINTSFORMULA(playerdata))
                                             except: continue
+                                            logpoints(datasettings(file="pcdata.txt", method="get", line=playerid),
+                                                      playerpoints)
                                             if playerpoints >= prolepoints:
                                                 if prole not in player.roles:
                                                     try: await player.add_roles(prole)
@@ -1602,6 +1651,33 @@ async def on_message(message):
                                     posnum + " range*\n"
                     await message.add_reaction(emoji=CHAR_SUCCESS)
                     await message.channel.send(whrm + whpl)
+    if str(message.content).startswith("??pointschange"):
+        pcp = linkedplayer(str(message.author.id))
+        if pcp is None:
+            await message.add_reaction(emoji=CHAR_FAILED)
+            await message.channel.send("**Error**: You are not linked to a Pointercrate Player!")
+        else:
+            pcnp = int(POINTSFORMULA(PLAYERDATA(pcp)))
+            pcc = loggedpointschange(pcp,pcnp)
+            if pcc is None:
+                await message.add_reaction(emoji=CHAR_FAILED)
+                await message.channel.send("**Error**: No new Points Changes to display!")
+            else:
+                if int(pcc['id']) == 1:
+                    await message.add_reaction(emoji=CHAR_FAILED)
+                    await message.channel.send("**Error**: No new Points Changes to display!")
+                else:
+                    pcdif = int(pcc['dif']); pcop = int(pcc['old'])
+                    if pcop == 0:
+                        await message.add_reaction(emoji=CHAR_FAILED)
+                        await message.channel.send("**Error**: No new Points Changes to display!")
+                    else:
+                        pcsym = "+-"
+                        if pcdif > 0: pcsym = "+"
+                        if pcdif < 0: pcsym = "-"
+                        await message.add_reaction(emoji=CHAR_SUCCESS)
+                        await message.channel.send("**" + message.author.name + "**: Your Points changed by **" +
+                                        pcsym + str(pcdif) + "** *[Old: " + str(pcop) + ", New: " + str(pcnp) + "]*")
     if str(message.content).startswith("??kchelp"):
         if membermoderator(message.author):
             hm1 = "**Killbot Circles Command List**\n*Coded by GunnerBones, Pointercrate system by Stadust*\n"
@@ -1655,6 +1731,8 @@ async def on_message(message):
             hm2 += "Lists all Points, Demons, and Positional roles for the server.\n"
             hm2 += "??whohas \"role name\" - [Anyone][LOCAL]\n"
             hm2 += "Lists all members with a role (and if it\'s a Killbot Circles role)\n"
+            hm2 += "??pointschangs - [Anyone][GLOBAL]\n"
+            hm2 += "Shows points increase/decrease after list changes\n"
             await message.author.send(hm1)
             time.sleep(1)
             await message.author.send(hm2)
@@ -1683,7 +1761,9 @@ async def on_message(message):
                                 print("[NDCD] Deleted " + ldata["Name"] + " because it is "
                                       + ldata['Difficulty'] + " [Guild:" + message.guild.name + "]")
     if message.channel.id == 266332849387339777 and message.author.id != 277391246035648512:
-        if str(message.content).startswith("??accept") or str(message.content).startswith("??reject"):
+        if str(message.content).startswith("??accept") or str(message.content).startswith("??reject") \
+                or str(message.content).startswith("??records add") or str(message.content).startswith("hey bot accept") \
+                or str(message.content).startswith("hey bot reject"):
             NRREVIEWRECORD = message.author.name
     if str(message.content).startswith("??rejectmessage "):
         if inallowedguild(message.guild,message.author):
