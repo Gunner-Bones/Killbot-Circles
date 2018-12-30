@@ -1652,32 +1652,149 @@ async def on_message(message):
                     await message.add_reaction(emoji=CHAR_SUCCESS)
                     await message.channel.send(whrm + whpl)
     if str(message.content).startswith("??pointschange"):
-        pcp = linkedplayer(str(message.author.id))
-        if pcp is None:
-            await message.add_reaction(emoji=CHAR_FAILED)
-            await message.channel.send("**Error**: You are not linked to a Pointercrate Player!")
-        else:
-            pcnp = int(POINTSFORMULA(PLAYERDATA(pcp)))
-            pcc = loggedpointschange(pcp,pcnp)
-            if pcc is None:
+        pcv = True; pcp = None; pcpl = None
+        if str(message.content).startswith("??pointschange "):
+            pcm = str(message.content).replace("??pointschange ",""); pcm = paramquotationlist(pcm)
+            if len(pcm) != 1:
                 await message.add_reaction(emoji=CHAR_FAILED)
-                await message.channel.send("**Error**: No new Points Changes to display!")
+                await message.channel.send("**Error**: Invalid parameters!")
+                pcv = False
             else:
-                if int(pcc['id']) == 1:
+                pcp = PLAYERDATA(pcm[0])
+                if pcp is None:
+                    await message.add_reaction(emoji=CHAR_FAILED)
+                    await message.channel.send("**Error**: Invalid Pointercrate player!")
+                    pcv = False
+                else:
+                    pcp = pcm[0]; pcpl = None
+                    for uid in alldatakeys("pcdata.txt"):
+                        if linkedplayer(uid) == pcm[0]: pcpl = getglobalmember(uid); break
+                    if pcpl is None:
+                        await message.add_reaction(emoji=CHAR_FAILED)
+                        await message.channel.send("**Error**: Invalid Pointercrate player!")
+                        pcv = False
+                    else: pcpl = pcpl.name
+        else: pcp = linkedplayer(str(message.author.id)); pcpl = message.author.name
+        if pcv:
+            if pcp is None:
+                await message.add_reaction(emoji=CHAR_FAILED)
+                await message.channel.send("**Error**: You are not linked to a Pointercrate Player!")
+            else:
+                pcnp = int(POINTSFORMULA(PLAYERDATA(pcp)))
+                pcc = loggedpointschange(pcp)
+                if pcc is None:
                     await message.add_reaction(emoji=CHAR_FAILED)
                     await message.channel.send("**Error**: No new Points Changes to display!")
                 else:
-                    pcdif = int(pcc['dif']); pcop = int(pcc['old'])
-                    if pcop == 0:
+                    if int(pcc['id']) == 1:
                         await message.add_reaction(emoji=CHAR_FAILED)
                         await message.channel.send("**Error**: No new Points Changes to display!")
                     else:
-                        pcsym = "+-"
-                        if pcdif > 0: pcsym = "+"
-                        if pcdif < 0: pcsym = "-"
-                        await message.add_reaction(emoji=CHAR_SUCCESS)
-                        await message.channel.send("**" + message.author.name + "**: Your Points changed by **" +
-                                        pcsym + str(pcdif) + "** *[Old: " + str(pcop) + ", New: " + str(pcnp) + "]*")
+                        pcdif = int(pcc['dif']); pcop = int(pcc['old'])
+                        if pcop == 0:
+                            await message.add_reaction(emoji=CHAR_FAILED)
+                            await message.channel.send("**Error**: No new Points Changes to display!")
+                        else:
+                            pcsym = "+-"
+                            if pcdif > 0: pcsym = "+"
+                            if pcdif < 0: pcsym = ""
+                            await message.add_reaction(emoji=CHAR_SUCCESS)
+                            await message.channel.send("**" + pcpl + "**: Your Points changed by **" +
+                                            pcsym + str(pcdif) + "** *[Old: " + str(pcop) + ", New: " + str(pcnp) + "]*")
+    if str(message.content).startswith("??howcloseto "):
+        hcm = str(message.content).replace("??howcloseto ", ""); hcp = paramquotationlist(hcm)
+        if hcp is None:
+            await message.add_reaction(emoji=CHAR_FAILED)
+            await message.channel.send("**Error**: Invalid parameters!")
+        else:
+            if len(hcp) != 1:
+                await message.add_reaction(emoji=CHAR_FAILED)
+                await message.channel.send("**Error**: Invalid parameters!")
+            else:
+                hcr = getrole(message.guild, hcp[0])
+                if hcr is None:
+                    await message.add_reaction(emoji=CHAR_FAILED)
+                    await message.channel.send("**Error**: Invalid role!")
+                else:
+                    hcpl = linkedplayer(str(message.author.id))
+                    if hcpl is None:
+                        await message.add_reaction(emoji=CHAR_FAILED)
+                        await message.channel.send("**Error**: You are not linked to a Pointercrate Player!")
+                    else:
+                        hcpd = PLAYERDATA(hcpl)
+                        if hcpd is None:
+                            await message.add_reaction(emoji=CHAR_FAILED)
+                            await message.channel.send("**Error**: You are linked to an Invalid Player!")
+                        else:
+                            hcpp = int(POINTSFORMULA(hcpd))
+                            hcm = ""
+                            for pid in alldatakeys("pcproles.txt"):
+                                if pid == str(hcr.id):
+                                    prq = datasettings(file="pcproles.txt",method="get",line=pid)
+                                    if prq is None: continue
+                                    if prq == "$REMOVED$": continue
+                                    prq = int(prq)
+                                    hcm += "Requirement for POINTS ROLE **" + hcr.name + "**: *" + str(prq) + \
+                                           "*, you have: *" + str(hcpp) + "*\n"
+                                    prd = prq - hcpp
+                                    if prd > 0: hcm += "You need **" + str(prd) + "** more points for this role!\n"
+                                    else: hcm += "You already meet the requirements for this role!\n"
+                            for did in alldatakeys("pcdroles.txt"):
+                                if did == str(hcr.id):
+                                    drq = datasettings(file="pcdroles.txt",method="get",line=did)
+                                    if drq is None: continue
+                                    if drq == "$REMOVED$": continue
+                                    drq = drq.split(";"); drh = []
+                                    for d in hcpd['beaten']:
+                                        if d['name'] in drq: drh.append(d['name'])
+                                    for d in hcpd['verified']:
+                                        if d['name'] in drq: drh.append(d['name'])
+                                    drs = []
+                                    for dr in drq:
+                                        df = False
+                                        if dr in drh: df = True
+                                        drs.append({'name':dr,'found':df})
+                                    drsf = True; drff = []
+                                    for dr in drs:
+                                        if not dr['found']: drsf = False; drff.append(dr['name'])
+                                    drqn = ""
+                                    for d in drq: drqn += d + ", "
+                                    drqn = drqn[:len(drqn) - 2]
+                                    drhn = ""
+                                    for d in drh: drhn += d + ", "
+                                    drhn = drhn[:len(drhn) - 2]
+                                    if drhn == "": drhn = "No Required Demons"
+                                    hcm += "Requirement for DEMONS ROLE **" + hcr.name + "**: *" + drqn + \
+                                           "*, you have: *" + drhn + "*\n"
+                                    if not drsf:
+                                        drfn = ""
+                                        for d in drff: drfn += d + ", "
+                                        drfn = drfn[:len(drfn) - 2]
+                                        hcm += "You need **" + drfn + "** for this role!\n"
+                                    else: hcm += "You already meet the requirements for this role!\n"
+                            for posid in alldatakeys("pcposroles.txt"):
+                                if posid == str(hcr.id):
+                                    posrq = datasettings(file="pcposroles.txt",method="get",line=posid)
+                                    if posrq is None: continue
+                                    if posrq == "$REMOVED$": continue
+                                    posrq = posrq.split("-"); posnum = int(posrq[0]); posbase = int(posrq[1])
+                                    poshr = 0
+                                    for d in hcpd['beaten']:
+                                        if int(d['position']) <= posbase: poshr += 1
+                                    for d in hcpd['verified']:
+                                        if int(d['position']) <= posbase: poshr += 1
+                                    hcm += "Requirement for POSITIONAL ROLE **" + hcr.name + "**: *POS: " + str(posbase) \
+                                           + ", REQ: " + str(posnum) + "*, you have in that range: *" + str(poshr) + "*\n"
+                                    if poshr < posnum:
+                                        posd = posnum - poshr
+                                        hcm += "You need **" + str(posd) + "** more Demons in that range for this role!\n"
+                                    else: hcm += "You already meet the requirements for this role!\n"
+                            if hcm == "":
+                                await message.add_reaction(emoji=CHAR_FAILED)
+                                await message.channel.send("**" + message.author.name + "**: This is not a Points/Demons/Positional role!")
+                            else:
+                                await message.add_reaction(emoji=CHAR_SUCCESS)
+                                await message.channel.send("**" + message.author.name + "**: " + hcm)
     if str(message.content).startswith("??kchelp"):
         if membermoderator(message.author):
             hm1 = "**Killbot Circles Command List**\n*Coded by GunnerBones, Pointercrate system by Stadust*\n"
@@ -1733,6 +1850,8 @@ async def on_message(message):
             hm2 += "Lists all members with a role (and if it\'s a Killbot Circles role)\n"
             hm2 += "??pointschangs - [Anyone][GLOBAL]\n"
             hm2 += "Shows points increase/decrease after list changes\n"
+            hm2 += "??howcloseto - [Anyone][GLOBAL]\n"
+            hm2 += "Shows how close you are to a Points/Demons/Positional role\n"
             await message.author.send(hm1)
             time.sleep(1)
             await message.author.send(hm2)
