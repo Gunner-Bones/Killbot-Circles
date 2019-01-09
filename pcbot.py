@@ -1962,5 +1962,6 @@ async def on_message(message):
                     except: pass
     if message.channel.id == 502229541549244437 and not message.author.bot:
         await message.add_reaction("👍"); await message.add_reaction("👎"); await message.add_reaction("❓")
-
+    if message.channel.id in [456448992482689025,458611263543574538] and not message.author.bot:
+        await message.add_reaction("👍"); await message.add_reaction("👎")
 client.run(SECRET)
