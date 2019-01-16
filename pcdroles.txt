@@ -20,4 +20,9 @@
 503451119020670977=Audio Expulsion
 526253253533368340=The Hell Factory;A Bizarre Phantasm;Artificial Ideology
 527278737679581184=Red World Rebirth;Bloodbath;Quantum Processing
-528619989020966915=Envy;Idols;Under lavaland;Killerzone;Violently X;Heat Wave
+528619989020966915=EnvY;Idols;Under lavaland;Killerzone;Violently X;Heat Wave
+528903209008365579=Cataclysm;Bloodbath;Aftermath
+498898240507215872=Devil Vortex
+528904110511226901=The Hell Zone;The Hell World;The Hell Dignity;The Hell Origin
+528905216205127701=ATMarbl;Bausha Vortex;Cadrega City
+530143965488611331=Digital Descent;Photovoltaic II;Catalyze;Mystic;Audio Extraction

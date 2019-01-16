@@ -20,6 +20,18 @@ CHAR_FAILED = "❌"
 CHAR_SENT = "📨"
 
 
+def condensedatetime(d):
+    dt = str(d).split(" "); return dt[0]
+
+def datetimetoshort(d):
+    dt = str(d).split(":")
+    dt[dt.index(dt[2])] = dt[2].split(".")[0]
+    dr = ""
+    if dt[0] != "0": dr += dt[0] + " hours "
+    if dt[1] != "00": dr += dt[1] + " minutes "
+    if dt[2] != "00": dr += dt[2] + " seconds"
+    return dr
+
 def memberadmin(member):
     for r in member.roles:
        if r.permissions.administrator: return True
@@ -46,7 +58,7 @@ def inallowedguild(g,m):
     allowedguilds = [[162862229065039872,0],[395654171422097420,1],[503422247927808010,0]]
     for ag in allowedguilds:
         if ag[0] == g.id:
-            if ag[1] == 1: return memberadmin(m)
+            if ag[1] == 1: return membermoderator(m)
             return True
     return False
 
@@ -923,6 +935,7 @@ async def on_message(message):
                     nddcount = 0
                     roleconflict = False
                     print("[Manual Refresh] Roles Refresh started")
+                    rts = datetime.datetime.now()
                     DEMONSLISTREFRESH()
                     if alldatakeys("pcdata.txt") != []:
                         for playerid in alldatakeys("pcdata.txt"):
@@ -1123,12 +1136,18 @@ async def on_message(message):
                     if roleconflict:
                         await message.channel.send("*(Some roles could not be added due to them having a higher "
                                                    "hierarchy than this Bot\'s Role)*")
-                    await message.channel.send("**" + message.author.name +
-                                               "**: Manual Refresh finished [Added " + str(pacount) + "/Removed " +
-                                               str(prcount) + " Points Roles, Added " + str(dacount) + "/Removed " +
-                                               str(drcount) + " Demons Roles, Added " + str(posacount) + "/Removed " +
-                                               str(posrcount) + " Positional Roles, Removed " + str(nddcount) +
-                                               " Non-Extreme/Insane/Hard Demons from New-Rated-Demons Channels]")
+                    rtf = datetime.datetime.now() - rts
+                    emb = discord.Embed(title="Manual Refresh " + condensedatetime(datetime.datetime.now()), description="Time Elapsed: " + datetimetoshort(rtf), color=0x5c5c5c)
+                    emb.add_field(name="Points Roles",value="Added " + str(pacount) + " | Removed " + str(prcount),
+                                  inline=True)
+                    emb.add_field(name="Demons Roles", value="Added " + str(dacount) + " | Removed " + str(drcount),
+                                  inline=True)
+                    emb.add_field(name="Positional Roles", value="Added " + str(posacount) + " | Removed " + str(posrcount),
+                                  inline=True)
+                    emb.add_field(name="Non-Demons from New-Rated-Demons Channels", value="Removed " + str(nddcount),
+                                  inline=True)
+                    await message.channel.send("**" + message.author.name + "**: Manual Refresh finished")
+                    await message.channel.send(embed=emb)
                     if len(ipcount) > 0:
                         ipn = ""
                         for i in ipcount:
@@ -1882,8 +1901,10 @@ async def on_message(message):
     if message.channel.id == 266332849387339777 and message.author.id != 277391246035648512:
         if str(message.content).startswith("??accept") or str(message.content).startswith("??reject") \
                 or str(message.content).startswith("??records add") or str(message.content).startswith("hey bot accept") \
-                or str(message.content).startswith("hey bot reject"):
+                or str(message.content).startswith("hey bot reject") or str(message.content).startswith("??records accept")\
+                or str(message.content).startswith("??records reject"):
             NRREVIEWRECORD = message.author.name
+        if str(message.content).startswith("??records get"): NRREVIEWRECORD = None
     if str(message.content).startswith("??rejectmessage "):
         if inallowedguild(message.guild,message.author):
             rmm = str(message.content).replace("??rejectmessage ",""); rmp = paramquotationlist(rmm)
