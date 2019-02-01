@@ -373,6 +373,17 @@ def loggedpointschange(pid,mn=0):
     lpdif = lpnew - lpold
     return {'id':lplid,'old':lpold,'dif':lpdif}
 
+def feedbackposfix():
+    for f in alldatakeys("pcfeed.txt"):
+        fb = datasettings(file="pcfeed.txt",method="get",line=f)
+        fbs = str(fb).split(";")
+        if isnumber(fbs[1]):
+            fbn = ""
+            global DEMONSLIST
+            for d in DEMONSLIST:
+                if str(d['position']) == fbs[1]:
+                    fbn = d['name']
+            datasettings(file="pcfeed.txt",method="change",line=f,newvalue=fbs[0] + ";" + fbn)
 
 
 def PLAYERDATA(id):
@@ -426,6 +437,7 @@ async def on_ready():
     for server in client.guilds:
         if server is not None: sl += server.name + ", "
     print("Connected Guilds: " + sl[:len(sl) - 2])
+    feedbackposfix()
     await client.change_presence(activity=discord.Game(name=(DEMONSLIST[random.randint(0, 99)])['name']))
 
 
@@ -484,7 +496,6 @@ async def on_reaction_add(reaction, user):
                                         await hu.send(smrmr)
                                         await smnc.send("**" + user.name + "**, Rejection Reason sent!")
                                         NRREVIEWRM.remove(smnr)
-
 
 
 REFRESHACTIVE = False
@@ -1195,9 +1206,9 @@ async def on_message(message):
                                 for d in DEMONSLIST:
                                     if fbd == d['position']: fbdn = d['name']
                                 for d in fbpd['beaten']:
-                                    if d['position'] == fbd: fbdf = True
+                                    if fbdn.lower() == d['name'].lower(): fbdf = True
                                 for d in fbpd['verified']:
-                                    if d['position'] == fbd: fbdf = True
+                                    if fbdn.lower() == d['name'].lower(): fbdf = True
                                 if not fbdf:
                                     await message.add_reaction(emoji=CHAR_FAILED)
                                     await message.channel.send("**Error**: You have not beaten " + fbdn + "!")
@@ -1212,7 +1223,7 @@ async def on_message(message):
                                             for gf in alldatakeys("pcfeed.txt"):
                                                 fgf = datasettings(file="pcfeed.txt",method="get",line=gf)
                                                 fgf = fgf.split(";")
-                                                if fgf[0] == linkedplayer(message.author.id) and fgf[1] == str(fbd):
+                                                if fgf[0] == linkedplayer(message.author.id) and fgf[1].lower() == str(fbdn).lower():
                                                     await message.add_reaction(emoji=CHAR_FAILED)
                                                     await message.channel.send("**Error**: You have already written Feedback for "
                                                                                + fbdn + "!")
@@ -1229,7 +1240,7 @@ async def on_message(message):
                                                 await fbch.send(fbfm)
                                                 datasettings(file="pcfeed.txt", method="add",
                                                              newkey="feedback" + str(random.randint(10000, 99999)),
-                                                             newvalue=linkedplayer(message.author.id) + ";" + str(fbd))
+                                                             newvalue=linkedplayer(message.author.id) + ";" + str(fbdn))
                                                 await message.add_reaction(emoji=CHAR_SUCCESS)
                                                 await message.channel.send("**" + message.author.name + "**: Feedback for "
                                                                            + fbdn + " sent!")
