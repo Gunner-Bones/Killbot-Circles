@@ -311,6 +311,12 @@ def alldatakeys(file) -> list:
         if nl == "": sl.remove(nl)
     return sl
 
+def cleardata(file):
+    s = None
+    try: s = open(file,"w")
+    except: return
+    s.truncate(); s.close()
+
 DEMONSLIST = []
 
 def linkedplayer(uid):
@@ -1825,6 +1831,79 @@ async def on_message(message):
                             else:
                                 await message.add_reaction(emoji=CHAR_SUCCESS)
                                 await message.channel.send("**" + message.author.name + "**: " + hcm)
+    if str(message.content).startswith("??ldot-current"):
+        if inallowedguild(message.guild,message.author):
+            if datasettings(file="pcldot-current.txt",method="get",line="DEMON") == "NONE":
+                await message.add_reaction(emoji=CHAR_SUCCESS)
+                await message.channel.send("**" + message.author.name + "**: *List Demon of the X* is not active right now")
+            else:
+                pass
+    if str(message.content).startswith("??ldot-start"):
+        #??ldot-start "duration" "range"
+        if inallowedguild(message.guild,message.author):
+            ls = str(message.content).replace("??ldot-start ",""); ls = paramquotationlist(ls)
+            if len(ls) != 2:
+                await message.add_reaction(emoji=CHAR_FAILED)
+                await message.channel.send(
+                    "**" + message.author.name + "**: Invalid parameters!")
+            else:
+                lsd = str(ls[0]).lower()
+                lsda = ['week','biweek','month']
+                if lsd not in lsda:
+                    await message.add_reaction(emoji=CHAR_FAILED)
+                    await message.channel.send(
+                        "**" + message.author.name + "**: Invalid duration!")
+                else:
+                    lsr = str(ls[1])
+                    if '-' not in lsr:
+                        await message.add_reaction(emoji=CHAR_FAILED)
+                        await message.channel.send(
+                            "**" + message.author.name + "**: Invalid range!")
+                    else:
+                        lsr = lsr.split("-")
+                        lsv = True; lsrmin = 0; lsrmax = 0
+                        try: lsrmin = int(lsr[0])
+                        except: lsv = False
+                        try: lsrmax = int(lsr[1])
+                        except: lsv = False
+                        if lsrmin <= lsrmax or lsrmin > 100 or lsrmax < 1: lsv = False
+                        if not lsv:
+                            await message.add_reaction(emoji=CHAR_FAILED)
+                            await message.channel.send(
+                                "**" + message.author.name + "**: Invalid range!")
+                        else:
+                            await message.add_reaction(emoji=CHAR_SUCCESS)
+                            await message.channel.send(
+                                "**" + message.author.name + "**: Generating LDOT...")
+                            DEMONSLISTREFRESH()
+                            global DEMONSLIST
+                            LDOT_DEMON = DEMONSLIST[random.randint(lsrmin,lsrmax)]
+                            LDOT_START = datetime.datetime.now()
+                            lsdav = {'week':datetime.timedelta(weeks=1),'biweek':datetime.timedelta(weeks=2),
+                                     'month':datetime.timedelta(weeks=4)}
+                            lsdan = {'week':'Week','biweek':'2 Weeks','month':'Month'}
+                            LDOT_DURATION = lsdan[lsd]
+                            LDOT_END = LDOT_START + lsdav[lsd]
+                            cleardata("pcldot-current.txt")
+                            datasettings(file="pcldot-current",method="change",line="DEMON",
+                                         newvalue=LDOT_DEMON['name'])
+                            datasettings(file="pcldot-current", method="change", line="START",
+                                         newvalue=str(LDOT_START))
+                            datasettings(file="pcldot-current", method="change", line="DURATION",
+                                         newvalue=LDOT_DURATION)
+                            datasettings(file="pcldot-current", method="change", line="END",
+                                         newvalue=str(LDOT_END))
+                            if alldatakeys("pcdata.txt") != []:
+                                for playerid in alldatakeys("pcdata.txt"):
+                                    player = getmember(message.channel.guild, playerid)
+                                    if player is None: continue
+                                    playerdata = PLAYERDATA(
+                                        datasettings(file="pcdata.txt", method="get", line=playerid))
+                                    datasettings(file="pcldot-current")
+
+
+
+
     if str(message.content).startswith("??kchelp"):
         if membermoderator(message.author):
             hm1 = "**Killbot Circles Command List**\n*Coded by GunnerBones, Pointercrate system by Stadust*\n"
