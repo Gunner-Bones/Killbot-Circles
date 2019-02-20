@@ -197,6 +197,26 @@ def strtolist(s):
         if t.startswith(" "): st[st.index(t)] = t[1:]
     return st
 
+def samelists(l1,l2):
+    if len(l1) == 0 or len(l2) == 0: return False
+    if len(l1) == 1 and len(l2) == 1 and l1[0] == l2[0]: return True
+    lv = 0; lu = []
+    for d1 in l1:
+        for d2 in l2:
+            if d2 == d1 and d1 not in lu:
+                lv += 1; lu.append(d1); break
+    if lv == len(l1) and lv == len(l2): return True
+    return False
+
+def differencesinlists(l1,l2):
+    if samelists(l1,l2): return []
+    dil = []
+    for d1 in l1:
+        if d1 not in l2 and d1 not in dil: dil.append(d1)
+    for d2 in l2:
+        if d2 not in l1 and d2 not in dil: dil.append(d2)
+    return dil
+
 def strtolod(s) -> list:
     global DEMONSLIST
     # [{'n':d,'p':d},{'n':d,'p':d}]
@@ -390,6 +410,19 @@ def feedbackposfix():
                 if str(d['position']) == fbs[1]:
                     fbn = d['name']
             datasettings(file="pcfeed.txt",method="change",line=f,newvalue=fbs[0] + ";" + fbn)
+
+def ldotleaderboards():
+    ll = []
+    if datasettings(file="pcldot-current.txt",method="get",line="DEMON") is None or \
+            datasettings(file="pcldot-current.txt", method="get", line="DEMON") == "NONE": return []
+    if alldatakeys("pcldot-current.txt") == []: return []
+    for pid in alldatakeys("pcldot-current.txt"):
+        if pid != "DEMON" and pid != "START" and pid != "DURATION" and pid != "END":
+            pdemons = str(datasettings(file="pcldot-current.txt",method="get",line=pid)).split(";")
+            for pd in pdemons:
+                if pd.startswith("+"):
+                    if pd[1:pd.index("[")] == datasettings(file="pcldot-current.txt",method="get",line="DEMON"):
+
 
 
 def PLAYERDATA(id):
@@ -1119,6 +1152,24 @@ async def on_message(message):
                                                         print("[Positonal Roles] " + player.name + " had " + posrole.name +
                                                               "removed (base position:" + str(posreq) + ",number required:" + str(posnum) +
                                                               ",has:" + str(pposfound))
+                            # LDOT Refresh
+                            if datasettings(file="pcldot-current.txt",method="get",line="DEMON") != "NONE" or \
+                                atasettings(file="pcldot-current.txt", method="get", line="DEMON") is not None:
+                                ldotdemons = str(datasettings(file="pcldot-current.txt",method="get",line="PID" + playerid)).split(";")
+                                playertotalbeaten = []
+                                for d in playerdata['beaten']: playertotalbeaten.append(d['name'])
+                                for d in playerdata['verified']: playertotalbeaten.append(d['name'])
+                                if not samelists(ldotdemons,playertotalbeaten):
+                                    playernewdemons = differencesinlists(ldotdemons,playertotalbeaten)
+                                    if len(playernewdemons) > 0:
+                                        ldotreappend = ldotdemons
+                                        for nd in playernewdemons:
+                                            ldotreappend.append("+" + nd['name'] + "[" + condensedatetime(datetime.datetime.now() + "]"))
+                                        pndt = ""
+                                        for pnd in playernewdemons:
+                                            pndt += pnd + ";"
+                                        pndt = pndt[:len(pndt) - 1]
+                                        datasettings(file="pcldot-current.txt", method="change", line="PID" + playerid,newvalue=pndt)
                             # Invalid Players
                             if playerdata is None: ipcount.append({'name':player,'pid':datasettings(
                                 file="pcdata.txt", method="get", line=playerid)})
@@ -1833,13 +1884,13 @@ async def on_message(message):
                                 await message.channel.send("**" + message.author.name + "**: " + hcm)
     if str(message.content).startswith("??ldot-current"):
         if inallowedguild(message.guild,message.author):
-            if datasettings(file="pcldot-current.txt",method="get",line="DEMON") == "NONE":
+            if datasettings(file="pcldot-current.txt",method="get",line="DEMON") == "NONE" or \
+                            datasettings(file="pcldot-current.txt", method="get", line="DEMON") is None:
                 await message.add_reaction(emoji=CHAR_SUCCESS)
                 await message.channel.send("**" + message.author.name + "**: *List Demon of the X* is not active right now")
             else:
                 pass
     if str(message.content).startswith("??ldot-start "):
-        #??ldot-start "duration" "range"
         if inallowedguild(message.guild,message.author):
             ls = str(message.content).replace("??ldot-start ",""); ls = paramquotationlist(ls)
             if len(ls) != 2:
