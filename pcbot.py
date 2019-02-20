@@ -1838,7 +1838,7 @@ async def on_message(message):
                 await message.channel.send("**" + message.author.name + "**: *List Demon of the X* is not active right now")
             else:
                 pass
-    if str(message.content).startswith("??ldot-start"):
+    if str(message.content).startswith("??ldot-start "):
         #??ldot-start "duration" "range"
         if inallowedguild(message.guild,message.author):
             ls = str(message.content).replace("??ldot-start ",""); ls = paramquotationlist(ls)
@@ -1862,9 +1862,9 @@ async def on_message(message):
                     else:
                         lsr = lsr.split("-")
                         lsv = True; lsrmin = 0; lsrmax = 0
-                        try: lsrmin = int(lsr[0])
+                        try: lsrmin = int(lsr[1])
                         except: lsv = False
-                        try: lsrmax = int(lsr[1])
+                        try: lsrmax = int(lsr[0])
                         except: lsv = False
                         if lsrmin <= lsrmax or lsrmin > 100 or lsrmax < 1: lsv = False
                         if not lsv:
@@ -1876,8 +1876,7 @@ async def on_message(message):
                             await message.channel.send(
                                 "**" + message.author.name + "**: Generating LDOT...")
                             DEMONSLISTREFRESH()
-                            global DEMONSLIST
-                            LDOT_DEMON = DEMONSLIST[random.randint(lsrmin,lsrmax)]
+                            LDOT_DEMON = DEMONSLIST[random.randint(lsrmax,lsrmin)]['name']
                             LDOT_START = datetime.datetime.now()
                             lsdav = {'week':datetime.timedelta(weeks=1),'biweek':datetime.timedelta(weeks=2),
                                      'month':datetime.timedelta(weeks=4)}
@@ -1885,25 +1884,29 @@ async def on_message(message):
                             LDOT_DURATION = lsdan[lsd]
                             LDOT_END = LDOT_START + lsdav[lsd]
                             cleardata("pcldot-current.txt")
-                            datasettings(file="pcldot-current",method="change",line="DEMON",
-                                         newvalue=LDOT_DEMON['name'])
-                            datasettings(file="pcldot-current", method="change", line="START",
+                            datasettings(file="pcldot-current.txt",method="add",newkey="DEMON",
+                                         newvalue=LDOT_DEMON)
+                            datasettings(file="pcldot-current.txt", method="add", newkey="START",
                                          newvalue=str(LDOT_START))
-                            datasettings(file="pcldot-current", method="change", line="DURATION",
+                            datasettings(file="pcldot-current.txt", method="add", newkey="DURATION",
                                          newvalue=LDOT_DURATION)
-                            datasettings(file="pcldot-current", method="change", line="END",
+                            datasettings(file="pcldot-current.txt", method="add", newkey="END",
                                          newvalue=str(LDOT_END))
+                            di = 0
                             if alldatakeys("pcdata.txt") != []:
                                 for playerid in alldatakeys("pcdata.txt"):
-                                    player = getmember(message.channel.guild, playerid)
-                                    if player is None: continue
+                                    if di == 10: break
                                     playerdata = PLAYERDATA(
                                         datasettings(file="pcdata.txt", method="get", line=playerid))
-                                    datasettings(file="pcldot-current")
-
-
-
-
+                                    if playerdata is None: continue
+                                    di += 1
+                                    print("[Debug] Checking Player " + str(di) + " : " + playerid + " " + playerdata['name'])
+                                    playerdemons = ""
+                                    for d in playerdata['beaten']: playerdemons += d['name'] + ";"
+                                    for d in playerdata['verified']: playerdemons += d['name'] + ";"
+                                    playerdemons = playerdemons[:len(playerdemons) - 1]
+                                    datasettings(file="pcldot-current.txt",method="add",newkey="PID" + datasettings(file="pcdata.txt", method="get", line=playerid),newvalue=playerdemons)
+                            await message.channel.send("**" + message.author.name + "**: LDOT Started!\n**DEMON**: " + LDOT_DEMON + "\n**DURATION**: " + LDOT_DURATION)
     if str(message.content).startswith("??kchelp"):
         if membermoderator(message.author):
             hm1 = "**Killbot Circles Command List**\n*Coded by GunnerBones, Pointercrate system by Stadust*\n"
