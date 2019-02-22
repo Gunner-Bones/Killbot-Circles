@@ -243,6 +243,34 @@ def strtolod(s) -> list:
         st[st.index(t)] = sti
     return st
 
+def datetostr(d):
+    dt = str(d).split(" ")
+    return dt[0]
+
+def timetostr(d):
+    dt = str(d).split(" "); dt = str(dt[1]).split(":")
+    return dt[0] + ":" + dt[1]
+
+def formattoday():
+    return datetostr(datetime.datetime.now()) + " " + timetostr(datetime.datetime.now())
+
+def strtodatetime(s):
+    # Format: 2018-12-25, 14:30
+    st = str(s).split("-")
+    st[2] = st[2][:st[2].index(" ")]
+    stm = str(s).split(":")
+    stm[0] = stm[0][stm[0].index(" ") + 1:]
+    return [datetime.date(year=int(st[0]),month=int(st[1]),day=int(st[2])),datetime.time(hour=int(stm[0]),
+                                                                                         minute=int(stm[1]))]
+
+def comparedates(d1,d2):
+    if len(d1) != 2 or len(d2) != 2: return None
+    if d1[0] > d2[0]: return d1
+    elif d1[0] < d2[0]: return d2
+    else:
+        if d1[1] > d2[1]: return d1
+        else: return d2
+
 def paramquotationlist(p):
     params = []
     while True:
@@ -413,15 +441,40 @@ def feedbackposfix():
 
 def ldotleaderboards():
     ll = []
+    # [rank,name,pid,date]
     if datasettings(file="pcldot-current.txt",method="get",line="DEMON") is None or \
             datasettings(file="pcldot-current.txt", method="get", line="DEMON") == "NONE": return []
     if alldatakeys("pcldot-current.txt") == []: return []
     for pid in alldatakeys("pcldot-current.txt"):
         if pid != "DEMON" and pid != "START" and pid != "DURATION" and pid != "END":
+            pf = False
             pdemons = str(datasettings(file="pcldot-current.txt",method="get",line=pid)).split(";")
             for pd in pdemons:
                 if pd.startswith("+"):
                     if pd[1:pd.index("[")] == datasettings(file="pcldot-current.txt",method="get",line="DEMON"):
+                        pf = True; break
+            if pf:
+                player = PLAYERDATA(str(pid).replace("PID", ""))
+                if player is None: continue
+                pddate = pd[pd.index("["):].replace("[",""); pddate = pddate.replace("]","")
+                ll.append([0,player['name'],str(pid).replace("PID",""),pddate])
+    if len(ll) == 1: return ll
+    li = 0
+    for i in range(1,6):
+        for l in ll:
+            if li != len(ll):
+                lc = comparedates(strtodatetime(ll[li][3]),strtodatetime(ll[li + 1][3]))
+                if lc == ll[li + 1][3]:
+                    lph = ll[li + 1]
+                    ll[li + 1] = ll[li]
+                    ll[li] = lph
+                li += 1
+    lan = 1
+    for l in ll:
+        l[0] = lan
+        lan += 1
+    return ll
+
 
 
 
@@ -1154,7 +1207,7 @@ async def on_message(message):
                                                               ",has:" + str(pposfound))
                             # LDOT Refresh
                             if datasettings(file="pcldot-current.txt",method="get",line="DEMON") != "NONE" or \
-                                atasettings(file="pcldot-current.txt", method="get", line="DEMON") is not None:
+                                datasettings(file="pcldot-current.txt", method="get", line="DEMON") is not None:
                                 ldotdemons = str(datasettings(file="pcldot-current.txt",method="get",line="PID" + playerid)).split(";")
                                 playertotalbeaten = []
                                 for d in playerdata['beaten']: playertotalbeaten.append(d['name'])
@@ -1889,7 +1942,27 @@ async def on_message(message):
                 await message.add_reaction(emoji=CHAR_SUCCESS)
                 await message.channel.send("**" + message.author.name + "**: *List Demon of the X* is not active right now")
             else:
-                pass
+                await message.add_reaction(emoji=CHAR_SUCCESS)
+                LDOT_DEMON = datasettings(file="pcldot-current.txt",method="get",line="DEMON")
+                LDOT_DURATION = datasettings(file="pcldot-current.txt",method="get",line="DURATION")
+                LDOT_END = datasettings(file="pcldot-current.txt",method="get",line="END")
+                LDOT_START = datasettings(file="pcldot-current.txt",method="get",line="START")
+                LDOT_LEADERBOARDS = ldotleaderboards()
+                LDOT_LM = ""
+                if LDOT_LEADERBOARDS == []: LDOT_LM = "*No one has beaten **" + LDOT_DEMON + "** in the event yet!"
+                else:
+                    for l in LDOT_LEADERBOARDS:
+                        ldifd = strtodatetime(l[3][0] + " " + l[3][1])[0] - strtodatetime(LDOT_START)[0]
+                        ldift = strtodatetime(l[3][1] + " " + l[3][1])[0] - strtodatetime(LDOT_START)[1]
+                        ldif = str(ldifd) + " " + str(ldift)
+                        LDOT_LM += str(l[0]) + ") **" + l[1] + "** - completed " + l[3][0] + " " + l[3][1] + "[took " + ldif + "]\n"
+                ldotm = "====================================\n"
+                ldotm += "**List Demon of the " + LDOT_DURATION + "**\n"
+                ldotm += "Demon: *" + LDOT_DEMON + "*\n"
+                ldotm += "Ends " + LDOT_END + "\n"
+                ldotm += "====================================\n"
+                ldotm += LDOT_LM
+                await message.channel.send(ldotm)
     if str(message.content).startswith("??ldot-start "):
         if inallowedguild(message.guild,message.author):
             ls = str(message.content).replace("??ldot-start ",""); ls = paramquotationlist(ls)
