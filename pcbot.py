@@ -462,8 +462,8 @@ def ldotleaderboards():
     li = 0
     for i in range(1,6):
         for l in ll:
-            if li != len(ll):
-                lc = comparedates(strtodatetime(ll[li][3]),strtodatetime(ll[li + 1][3]))
+            if li != len(ll) - 1:
+                lc = comparedates(strtodatetime(ll[li][3] + " 00:00"),strtodatetime(ll[li + 1][3] + " 00:00"))
                 if lc == ll[li + 1][3]:
                     lph = ll[li + 1]
                     ll[li + 1] = ll[li]
@@ -1217,7 +1217,7 @@ async def on_message(message):
                                     if len(playernewdemons) > 0:
                                         ldotreappend = ldotdemons
                                         for nd in playernewdemons:
-                                            ldotreappend.append("+" + nd['name'] + "[" + condensedatetime(datetime.datetime.now() + "]"))
+                                            ldotreappend.append("+" + nd + "[" + condensedatetime(datetime.datetime.now()) + "]")
                                         pndt = ""
                                         for pnd in playernewdemons:
                                             pndt += pnd + ";"
@@ -1935,6 +1935,18 @@ async def on_message(message):
                             else:
                                 await message.add_reaction(emoji=CHAR_SUCCESS)
                                 await message.channel.send("**" + message.author.name + "**: " + hcm)
+    if str(message.content).startswith("??debugldot-addcurrent"):
+        if inallowedguild(message.guild,message.author) and str(message.author.id) == "172861416364179456":
+            if datasettings(file="pcldot-current.txt", method="get", line="DEMON") == "NONE" or \
+                            datasettings(file="pcldot-current.txt", method="get", line="DEMON") is None:
+                await message.add_reaction(emoji=CHAR_FAILED)
+            else:
+                dlp = str(message.content).replace("??debugldot-addcurrent ","")
+                LDOT_DEMON = datasettings(file="pcldot-current.txt", method="get", line="DEMON")
+                ldotc = datasettings(file="pcldot-current.txt", method="get", line="PID" + dlp) + ";+" + LDOT_DEMON + "[" + \
+                condensedatetime(datetime.datetime.now()) + "]"
+                datasettings(file="pcldot-current.txt", method="change", line="PID" + dlp,newvalue=ldotc)
+                await message.add_reaction(emoji=CHAR_SUCCESS)
     if str(message.content).startswith("??ldot-current"):
         if inallowedguild(message.guild,message.author):
             if datasettings(file="pcldot-current.txt",method="get",line="DEMON") == "NONE" or \
@@ -1945,17 +1957,14 @@ async def on_message(message):
                 await message.add_reaction(emoji=CHAR_SUCCESS)
                 LDOT_DEMON = datasettings(file="pcldot-current.txt",method="get",line="DEMON")
                 LDOT_DURATION = datasettings(file="pcldot-current.txt",method="get",line="DURATION")
-                LDOT_END = datasettings(file="pcldot-current.txt",method="get",line="END")
+                LDOT_END = condensedatetime(datasettings(file="pcldot-current.txt",method="get",line="END"))
                 LDOT_START = datasettings(file="pcldot-current.txt",method="get",line="START")
                 LDOT_LEADERBOARDS = ldotleaderboards()
                 LDOT_LM = ""
-                if LDOT_LEADERBOARDS == []: LDOT_LM = "*No one has beaten **" + LDOT_DEMON + "** in the event yet!"
+                if LDOT_LEADERBOARDS == []: LDOT_LM = "*No one has beaten **" + LDOT_DEMON + "** in the event yet!*"
                 else:
                     for l in LDOT_LEADERBOARDS:
-                        ldifd = strtodatetime(l[3][0] + " " + l[3][1])[0] - strtodatetime(LDOT_START)[0]
-                        ldift = strtodatetime(l[3][1] + " " + l[3][1])[0] - strtodatetime(LDOT_START)[1]
-                        ldif = str(ldifd) + " " + str(ldift)
-                        LDOT_LM += str(l[0]) + ") **" + l[1] + "** - completed " + l[3][0] + " " + l[3][1] + "[took " + ldif + "]\n"
+                        LDOT_LM += str(l[0]) + ") **" + l[1] + "** - completed " + l[3] + "\n"
                 ldotm = "====================================\n"
                 ldotm += "**List Demon of the " + LDOT_DURATION + "**\n"
                 ldotm += "Demon: *" + LDOT_DEMON + "*\n"
