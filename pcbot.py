@@ -439,6 +439,11 @@ def feedbackposfix():
                     fbn = d['name']
             datasettings(file="pcfeed.txt",method="change",line=f,newvalue=fbs[0] + ";" + fbn)
 
+def ldotid():
+    lid = int(datasettings(file="pcvars.txt",method="get",line="LDOTID"))
+    datasettings(file="pcvars.txt", method="change", line="LDOTID",newvalue=str(lid + 1))
+    return str(lid + 1)
+
 def ldotleaderboards():
     ll = []
     # [rank,name,pid,date]
@@ -1226,6 +1231,29 @@ async def on_message(message):
                             # Invalid Players
                             if playerdata is None: ipcount.append({'name':player,'pid':datasettings(
                                 file="pcdata.txt", method="get", line=playerid)})
+                    # LDOT Finish Check
+                    if datasettings(file="pcldot-current.txt", method="get", line="DEMON") != "NONE" or \
+                                    datasettings(file="pcldot-current.txt", method="get", line="DEMON") is not None or \
+                        datasettings(file="pcldot-current.txt", method="get", line="DEMON") != "":
+                        LDOT_END = strtodatetime(datasettings(file="pcldot-current.txt", method="get", line="END"))
+                        ldotr = comparedates(LDOT_END,strtodatetime(formattoday()))
+                        if ldotr != LDOT_END:
+                            LDOT_LEADERBOARDS = ldotleaderboards()
+                            LDOT_DEMON = datasettings(file="pcldot-current.txt", method="get", line="DEMON")
+                            LDOT_DURATION = datasettings(file="pcldot-current.txt", method="get", line="DURATION")
+                            LDOT_END = condensedatetime(
+                                datasettings(file="pcldot-current.txt", method="get", line="END"))
+                            LDOT_START = datasettings(file="pcldot-current.txt", method="get", line="START")
+                            LDOT_ID = ldotid()
+                            ldotline = "---------------"
+                            datasettings(file="pcldot-lb.txt",method="add",newkey=ldotline,newvalue=ldotline)
+                            datasettings(file="pcldot-lb.txt", method="add", newkey=LDOT_ID + "DEMON", newvalue=LDOT_DEMON)
+                            datasettings(file="pcldot-lb.txt", method="add", newkey=LDOT_ID + "DURATION", newvalue=LDOT_DURATION)
+                            datasettings(file="pcldot-lb.txt", method="add", newkey=LDOT_ID + "END", newvalue=LDOT_END)
+                            datasettings(file="pcldot-lb.txt", method="add", newkey=LDOT_ID + "START", newvalue=LDOT_START)
+                            datasettings(file="pcldot-lb.txt", method="add", newkey=LDOT_ID + "LB", newvalue=str(LDOT_LEADERBOARDS))
+                            datasettings(file="pcldot-lb.txt", method="add", newkey=ldotline, newvalue=ldotline)
+                            cleardata("pcldot-current.txt")
                     # New Demon Channels
                     ndcl = strtolist(datasettings(file="pcvars.txt", method="get", line="NEWDEMONSCHANNELS"))
                     if len(ndcl) != 0:
@@ -1947,6 +1975,14 @@ async def on_message(message):
                 condensedatetime(datetime.datetime.now()) + "]"
                 datasettings(file="pcldot-current.txt", method="change", line="PID" + dlp,newvalue=ldotc)
                 await message.add_reaction(emoji=CHAR_SUCCESS)
+    if str(message.content).startswith("??ldot-setchannel "):
+        if inallowedguild(message.guild,message.author):
+            lm = str(message.content).replace("??ldot-setchannel ",""); lm = getchannel(message.guild,lm)
+            if lm is None:
+                await message.add_reaction(emoji=CHAR_FAILED)
+            else:
+                await message.add_reaction(emoji=CHAR_SUCCESS)
+                datasettings(file="pcvars.txt", method="change", line="LDOTCHANNEL", newvalue=str(lm.id))
     if str(message.content).startswith("??ldot-current"):
         if inallowedguild(message.guild,message.author):
             if datasettings(file="pcldot-current.txt",method="get",line="DEMON") == "NONE" or \
