@@ -480,6 +480,25 @@ def ldotleaderboards():
         lan += 1
     return ll
 
+def formatldotlb():
+    LDOT_DEMON = datasettings(file="pcldot-current.txt", method="get", line="DEMON")
+    LDOT_DURATION = datasettings(file="pcldot-current.txt", method="get", line="DURATION")
+    LDOT_END = condensedatetime(datasettings(file="pcldot-current.txt", method="get", line="END"))
+    LDOT_START = datasettings(file="pcldot-current.txt", method="get", line="START")
+    LDOT_LEADERBOARDS = ldotleaderboards()
+    LDOT_LM = ""
+    if LDOT_LEADERBOARDS == []:
+        LDOT_LM = "*No one has beaten **" + LDOT_DEMON + "** in the event yet!*"
+    else:
+        for l in LDOT_LEADERBOARDS:
+            LDOT_LM += str(l[0]) + ") **" + l[1] + "** - completed " + l[3] + "\n"
+    ldotm = "====================================\n"
+    ldotm += "**List Demon of the " + LDOT_DURATION + "**\n"
+    ldotm += "Demon: *" + LDOT_DEMON + "*\n"
+    ldotm += "Ends " + LDOT_END + "\n"
+    ldotm += "====================================\n"
+    ldotm += LDOT_LM
+    return ldotm
 
 
 
@@ -1231,9 +1250,26 @@ async def on_message(message):
                             # Invalid Players
                             if playerdata is None: ipcount.append({'name':player,'pid':datasettings(
                                 file="pcdata.txt", method="get", line=playerid)})
+                    # LDOT Message
+                    if datasettings(file="pcldot-current.txt", method="get", line="DEMON") != "NONE" and \
+                                    datasettings(file="pcldot-current.txt", method="get", line="DEMON") is not None and \
+                                    datasettings(file="pcldot-current.txt", method="get", line="DEMON") != "":
+                        for d in alldatakeys("pcmods.txt"):
+                            if str(d).startswith("LM"):
+                                dr = str(d).replace("LM",""); dr = dr.split("-")
+                                ds = getguild(dr[0])
+                                if ds is None: continue
+                                dc = getchannel(ds,dr[1])
+                                if dc is None: continue
+                                dm = datasettings(file="pcmods.txt",method="get",line=d)
+                                async for m in dc.history(limit=200):
+                                    if str(m.id) == dm:
+                                        try:
+                                            await m.edit(content=formatldotlb())
+                                        except: pass
                     # LDOT Finish Check
-                    if datasettings(file="pcldot-current.txt", method="get", line="DEMON") != "NONE" or \
-                                    datasettings(file="pcldot-current.txt", method="get", line="DEMON") is not None or \
+                    if datasettings(file="pcldot-current.txt", method="get", line="DEMON") != "NONE" and \
+                                    datasettings(file="pcldot-current.txt", method="get", line="DEMON") is not None and \
                         datasettings(file="pcldot-current.txt", method="get", line="DEMON") != "":
                         LDOT_END = strtodatetime(datasettings(file="pcldot-current.txt", method="get", line="END"))
                         ldotr = comparedates(LDOT_END,strtodatetime(formattoday()))
@@ -1983,6 +2019,59 @@ async def on_message(message):
             else:
                 await message.add_reaction(emoji=CHAR_SUCCESS)
                 datasettings(file="pcvars.txt", method="change", line="LDOTCHANNEL", newvalue=str(lm.id))
+    if str(message.content).startswith("??ldot-forceend"):
+        if inallowedguild(message.guild,message.author):
+            if datasettings(file="pcldot-current.txt", method="get", line="DEMON") == "NONE" or \
+                            datasettings(file="pcldot-current.txt", method="get", line="DEMON") is None or \
+                            datasettings(file="pcldot-current.txt", method="get", line="DEMON") == "":
+                await message.add_reaction(emoji=CHAR_FAILED)
+                await message.channel.send("**Error**: *List Demon of the X* is not active!")
+            else:
+                LDOT_LEADERBOARDS = ldotleaderboards()
+                LDOT_DEMON = datasettings(file="pcldot-current.txt", method="get", line="DEMON")
+                LDOT_DURATION = datasettings(file="pcldot-current.txt", method="get", line="DURATION")
+                LDOT_END = condensedatetime(
+                    datasettings(file="pcldot-current.txt", method="get", line="END"))
+                LDOT_START = datasettings(file="pcldot-current.txt", method="get", line="START")
+                LDOT_ID = ldotid()
+                ldotline = "---------------"
+                datasettings(file="pcldot-lb.txt", method="add", newkey=ldotline, newvalue=ldotline)
+                datasettings(file="pcldot-lb.txt", method="add", newkey=LDOT_ID + "DEMON", newvalue=LDOT_DEMON)
+                datasettings(file="pcldot-lb.txt", method="add", newkey=LDOT_ID + "DURATION", newvalue=LDOT_DURATION)
+                datasettings(file="pcldot-lb.txt", method="add", newkey=LDOT_ID + "END", newvalue=LDOT_END)
+                datasettings(file="pcldot-lb.txt", method="add", newkey=LDOT_ID + "START", newvalue=LDOT_START)
+                datasettings(file="pcldot-lb.txt", method="add", newkey=LDOT_ID + "LB", newvalue=str(LDOT_LEADERBOARDS))
+                datasettings(file="pcldot-lb.txt", method="add", newkey=ldotline, newvalue=ldotline)
+                cleardata("pcldot-current.txt")
+                await message.add_reaction(emoji=CHAR_SUCCESS)
+                await message.channel.send("**" + message.author.name + "**: LDOT Ended. Use ??refresh to update LDOT Messages")
+    if str(message.content).startswith("??ldot-message "):
+        if not memberadmin(message.author):
+            await message.add_reaction(emoji=CHAR_FAILED)
+            await message.channel.send("**Error**: You are not an Administrator!")
+        else:
+            lm = str(message.content).replace("??ldot-message ",""); lm = getchannel(message.guild,lm)
+            if lm is None:
+                await message.add_reaction(emoji=CHAR_FAILED)
+                await message.channel.send("**Error**: Invalid channel!")
+            else:
+                if datasettings(file="pcldot-current.txt", method="get", line="DEMON") == "NONE" or \
+                                datasettings(file="pcldot-current.txt", method="get", line="DEMON") is None or \
+                                datasettings(file="pcldot-current.txt", method="get", line="DEMON") == "":
+                    await message.add_reaction(emoji=CHAR_FAILED)
+                    await message.channel.send("**Error**: *List Demon of the X* is not active!")
+                else:
+                    lmm = None; lms = True
+                    try:
+                        lmm = await lm.send(formatldotlb())
+                    except: lms = False
+                    if not lms:
+                        await message.add_reaction(emoji=CHAR_FAILED)
+                        await message.channel.send("**Error**: Killbot Circles doesn't have Send Messages permissions for *" + lm.name + "*!")
+                    else:
+                        await message.add_reaction(emoji=CHAR_SUCCESS)
+                        datasettings(file="pcmods.txt",method="add",newkey="LM" + str(message.guild.id) + "-" + str(lm.id),newvalue=str(lmm.id))
+                        await message.channel.send("**" + message.author.name + "**: Set LDOT Message in *" + lm.name + "*!")
     if str(message.content).startswith("??ldot-current"):
         if inallowedguild(message.guild,message.author):
             if datasettings(file="pcldot-current.txt",method="get",line="DEMON") == "NONE" or \
@@ -1991,23 +2080,7 @@ async def on_message(message):
                 await message.channel.send("**" + message.author.name + "**: *List Demon of the X* is not active right now")
             else:
                 await message.add_reaction(emoji=CHAR_SUCCESS)
-                LDOT_DEMON = datasettings(file="pcldot-current.txt",method="get",line="DEMON")
-                LDOT_DURATION = datasettings(file="pcldot-current.txt",method="get",line="DURATION")
-                LDOT_END = condensedatetime(datasettings(file="pcldot-current.txt",method="get",line="END"))
-                LDOT_START = datasettings(file="pcldot-current.txt",method="get",line="START")
-                LDOT_LEADERBOARDS = ldotleaderboards()
-                LDOT_LM = ""
-                if LDOT_LEADERBOARDS == []: LDOT_LM = "*No one has beaten **" + LDOT_DEMON + "** in the event yet!*"
-                else:
-                    for l in LDOT_LEADERBOARDS:
-                        LDOT_LM += str(l[0]) + ") **" + l[1] + "** - completed " + l[3] + "\n"
-                ldotm = "====================================\n"
-                ldotm += "**List Demon of the " + LDOT_DURATION + "**\n"
-                ldotm += "Demon: *" + LDOT_DEMON + "*\n"
-                ldotm += "Ends " + LDOT_END + "\n"
-                ldotm += "====================================\n"
-                ldotm += LDOT_LM
-                await message.channel.send(ldotm)
+                await message.channel.send(formatldotlb())
     if str(message.content).startswith("??ldot-start "):
         if inallowedguild(message.guild,message.author):
             ls = str(message.content).replace("??ldot-start ",""); ls = paramquotationlist(ls)
@@ -2061,15 +2134,11 @@ async def on_message(message):
                                          newvalue=LDOT_DURATION)
                             datasettings(file="pcldot-current.txt", method="add", newkey="END",
                                          newvalue=str(LDOT_END))
-                            di = 0
                             if alldatakeys("pcdata.txt") != []:
                                 for playerid in alldatakeys("pcdata.txt"):
-                                    if di == 10: break
                                     playerdata = PLAYERDATA(
                                         datasettings(file="pcdata.txt", method="get", line=playerid))
                                     if playerdata is None: continue
-                                    di += 1
-                                    print("[Debug] Checking Player " + str(di) + " : " + playerid + " " + playerdata['name'])
                                     playerdemons = ""
                                     for d in playerdata['beaten']: playerdemons += d['name'] + ";"
                                     for d in playerdata['verified']: playerdemons += d['name'] + ";"
