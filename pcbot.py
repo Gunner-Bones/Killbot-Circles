@@ -512,16 +512,29 @@ def PLAYERDATA(id):
     rj = json.loads(rt)
     return rj['data']
 
-def POINTSFORMULA(data):
+def OLDPOINTSFORMULA(data):
     if data is None: return None
     # requires data from PLAYERDATA()
     s = 0
-    for d in data['beaten']:
-        if int(d['position']) <= 100:
-            s += (100 / ((100/5) + ((-100/5) + 1) * math.exp(-0.008*int(d['position']))))
+    for d in data['records']:
+        if int(d['demon']['position']) <= 100:
+            s += (100 / ((100/5) + ((-100/5) + 1) * math.exp(-0.008*int(d['demon']['position']))))
     for d in data['verified']:
         if int(d['position']) <= 100:
             s += (100 / ((100/5) + ((-100/5) + 1) * math.exp(-0.008*int(d['position']))))
+    return s
+
+def POINTSFORMULA(data):
+    global DEMONSLIST
+    if data is None: return None
+    # requires data from PLAYERDATA()
+    s = 0
+    for d in data['records']:
+        if int(d['demon']['position']) <= 100:
+            s += (((d['progress'] / 100) ** 5) * (100 / (math.exp(0.03 * (d['demon']['position'] - 1)))))
+    for d in data['verified']:
+        if int(d['position']) <= 100:
+            s += (((d['progress'] / 100) ** 5) * (100 / (math.exp(0.03 * (d['position'] - 1)))))
     return s
 
 def DEMONSLISTREFRESH():
@@ -533,7 +546,7 @@ def DEMONSLISTREFRESH():
     except:
         print("[Demons List] Could not access the Demons List!")
         return
-    rt1 = rt1[2:len(rt1) - 3]; rt2 = rt2[2:len(rt2) - 3]
+    rt1 = rt1[2:len(rt1) - 1]; rt2 = rt2[2:len(rt2) - 1]
     rt1 = rt1.replace("\\n", ""); rt2 = rt2.replace("\\n", "")
     rt1 = rt1.replace("  ", ""); rt2 = rt2.replace("  ", "")
     rj1 = json.loads(rt1); rj2 = json.loads(rt2)
@@ -671,10 +684,10 @@ async def oldsettingsalgorithm():
                                         drolestatus = []
                                         for d in droledemons: drolestatus.append({'n': d, 'f': False})
                                         for dr in droledemons:
-                                            for pd in playerdata['beaten']:
-                                                if pd['name'].lower() == dr.lower():
+                                            for pd in playerdata['records']:
+                                                if pd['demon']['name'].lower() == dr.lower():
                                                     for drs in drolestatus:
-                                                        if drs['n'].lower() == pd['name'].lower(): drs['f'] = True
+                                                        if drs['n'].lower() == pd['demon']['name'].lower(): drs['f'] = True
                                             for pv in playerdata['verified']:
                                                 if pv['name'].lower() == dr.lower():
                                                     for drs in drolestatus:
@@ -974,7 +987,7 @@ async def on_message(message):
                                         await message.channel.send("**Error**: Invalid player ID!")
                                     else:
                                         plphp = True
-                                        try: pt = plpd['beaten']
+                                        try: pt = plpd['records']
                                         except: plphp = False
                                         if not plphp:
                                             await message.add_reaction(emoji=CHAR_FAILED)
@@ -1131,10 +1144,10 @@ async def on_message(message):
                                             for d in droledemons: drolestatus.append({'n': d, 'f': False})
                                             if playerdata is None: continue
                                             for dr in droledemons:
-                                                for pd in playerdata['beaten']:
-                                                    if pd['name'].lower() == dr.lower():
+                                                for pd in playerdata['records']:
+                                                    if pd['demon']['name'].lower() == dr.lower():
                                                         for drs in drolestatus:
-                                                            if drs['n'].lower() == pd['name'].lower(): drs['f'] = True
+                                                            if drs['n'].lower() == pd['demon']['name'].lower(): drs['f'] = True
                                                 for pv in playerdata['verified']:
                                                     if pv['name'].lower() == dr.lower():
                                                         for drs in drolestatus:
@@ -1201,14 +1214,14 @@ async def on_message(message):
                                             posdata = posdata.split("-"); posreq = int(posdata[0]); posnum = int(posdata[1])
                                             pposfound = 0
                                             playerhasdemons = True
-                                            try: pbt = playerdata['beaten']
+                                            try: pbt = playerdata['records']
                                             except:
                                                 ipcount.append({'name': player, 'pid': datasettings(file="pcdata.txt",
                                                                                                     method="get", line=playerid)})
                                                 playerhasdemons = False
                                             if playerhasdemons:
-                                                for pb in playerdata['beaten']:
-                                                    if int(pb['position']) <= posreq: pposfound += 1
+                                                for pb in playerdata['records']:
+                                                    if int(pb['demon']['position']) <= posreq: pposfound += 1
                                                 for pv in playerdata['verified']:
                                                     if int(pv['position']) <= posreq: pposfound += 1
                                                 if pposfound >= posnum:
@@ -1234,7 +1247,7 @@ async def on_message(message):
                                 datasettings(file="pcldot-current.txt", method="get", line="DEMON") is not None:
                                 ldotdemons = str(datasettings(file="pcldot-current.txt",method="get",line="PID" + playerid)).split(";")
                                 playertotalbeaten = []
-                                for d in playerdata['beaten']: playertotalbeaten.append(d['name'])
+                                for d in playerdata['records']: playertotalbeaten.append(d['demon']['name'])
                                 for d in playerdata['verified']: playertotalbeaten.append(d['name'])
                                 if not samelists(ldotdemons,playertotalbeaten):
                                     playernewdemons = differencesinlists(ldotdemons,playertotalbeaten)
@@ -1379,8 +1392,8 @@ async def on_message(message):
                                 fbdn = "your meat"
                                 for d in DEMONSLIST:
                                     if fbd == d['position']: fbdn = d['name']
-                                for d in fbpd['beaten']:
-                                    if fbdn.lower() == d['name'].lower(): fbdf = True
+                                for d in fbpd['records']:
+                                    if fbdn.lower() == d['demon']['name'].lower(): fbdf = True
                                 for d in fbpd['verified']:
                                     if fbdn.lower() == d['name'].lower(): fbdf = True
                                 if not fbdf:
@@ -1539,11 +1552,13 @@ async def on_message(message):
                     await message.channel.send(
                         "**Error**: You are linked to an Invalid Player!")
                 else:
-                    pihd = {'name':"None",'position':999}
-                    for d in pid['beaten']:
-                        if int(d['position']) < int(pihd['position']): pihd = d
+                    pihd = {'name':"None",'pos':999}
+                    for d in pid['records']:
+                        if int(d['demon']['position']) < int(pihd['pos']):
+                            pihd['name'] = d['demon']['name']; pihd['pos'] = d['demon']['position']
                     for d in pid['verified']:
-                        if int(d['position']) < int(pihd['position']): pihd = d
+                        if int(d['position']) < int(pihd['pos']):
+                            pihd['name'] = d['demon']['name']; pihd['pos'] = d['demon']['position']
                     pipr = []
                     pidr = []
                     pipsr = []
@@ -1579,16 +1594,16 @@ async def on_message(message):
                         pipsl = pipsl[:len(pipsl) - 2]
                     if pipsl == "": pipsl = "None"
                     pimd = 0; pied = 0; pild = 0
-                    for d in pid['beaten']:
-                        if int(d['position']) < 51: pimd += 1
-                        elif int(d['position']) < 101 and int(d['position']) > 50: pied += 1
+                    for d in pid['records']:
+                        if int(d['demon']['position']) < 51: pimd += 1
+                        elif int(d['demon']['position']) < 101 and int(d['demon']['position']) > 50: pied += 1
                         else: pild += 1
                     pim = "`------USER INFORMATION FOR   `**" + iplayer.name + "**`  ---`"
                     pim +="\n**User ID**: " + str(iplayer.id)
                     pim +="\n**Linked Pointercrate Account**: " + pid['name']
                     pim +=" (ID: " + datasettings(file="pcdata.txt",method="get",line=str(iplayer.id))
                     pim +=")\n`-----------POINTERCRATE STATS-----------`\n**List Points**: " + str(POINTSFORMULA(pid))
-                    pim +="\n**Demons Completed**: " + str(len(pid['beaten'])) + " [" + str(pimd) + " Main, " + str(pied) \
+                    pim +="\n**Demons Completed**: " + str(len(pid['records'])) + " [" + str(pimd) + " Main, " + str(pied) \
                           + " Extended, " + str(pild) + " Legacy, " + str(len(pid['verified']) + len(pid['published']) +
                                                                 len(pid['created'])) + " Published/Verified/Created]"
                     pim +="\n**Hardest Demon**: " + pihd['name'] + "\n**Banned**: " + str(pid['banned']) + "\n"
@@ -1949,8 +1964,8 @@ async def on_message(message):
                                     if drq is None: continue
                                     if drq == "$REMOVED$": continue
                                     drq = drq.split(";"); drh = []
-                                    for d in hcpd['beaten']:
-                                        if d['name'] in drq: drh.append(d['name'])
+                                    for d in hcpd['records']:
+                                        if d['demon']['name'] in drq: drh.append(d['demon']['name'])
                                     for d in hcpd['verified']:
                                         if d['name'] in drq: drh.append(d['name'])
                                     drs = []
@@ -1983,8 +1998,8 @@ async def on_message(message):
                                     if posrq == "$REMOVED$": continue
                                     posrq = posrq.split("-"); posnum = int(posrq[0]); posbase = int(posrq[1])
                                     poshr = 0
-                                    for d in hcpd['beaten']:
-                                        if int(d['position']) <= posbase: poshr += 1
+                                    for d in hcpd['records']:
+                                        if int(d['demon']['position']) <= posbase: poshr += 1
                                     for d in hcpd['verified']:
                                         if int(d['position']) <= posbase: poshr += 1
                                     hcm += "Requirement for POSITIONAL ROLE **" + hcr.name + "**: *POS: " + str(posbase) \
@@ -2140,7 +2155,7 @@ async def on_message(message):
                                         datasettings(file="pcdata.txt", method="get", line=playerid))
                                     if playerdata is None: continue
                                     playerdemons = ""
-                                    for d in playerdata['beaten']: playerdemons += d['name'] + ";"
+                                    for d in playerdata['records']: playerdemons += d['demon']['name'] + ";"
                                     for d in playerdata['verified']: playerdemons += d['name'] + ";"
                                     playerdemons = playerdemons[:len(playerdemons) - 1]
                                     datasettings(file="pcldot-current.txt",method="add",newkey="PID" + datasettings(file="pcdata.txt", method="get", line=playerid),newvalue=playerdemons)
