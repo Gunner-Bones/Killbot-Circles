@@ -687,7 +687,9 @@ async def oldsettingsalgorithm():
                                             for pd in playerdata['records']:
                                                 if pd['demon']['name'].lower() == dr.lower():
                                                     for drs in drolestatus:
-                                                        if drs['n'].lower() == pd['demon']['name'].lower(): drs['f'] = True
+                                                        if drs['n'].lower() == pd['demon']['name'].lower():
+                                                            if pd['status'] == 'approved' and str(pd['progress']) == '100':
+                                                                drs['f'] = True
                                             for pv in playerdata['verified']:
                                                 if pv['name'].lower() == dr.lower():
                                                     for drs in drolestatus:
@@ -1147,7 +1149,10 @@ async def on_message(message):
                                                 for pd in playerdata['records']:
                                                     if pd['demon']['name'].lower() == dr.lower():
                                                         for drs in drolestatus:
-                                                            if drs['n'].lower() == pd['demon']['name'].lower(): drs['f'] = True
+                                                            if drs['n'].lower() == pd['demon']['name'].lower():
+                                                                if pd['status'] == 'approved' and str(
+                                                                        pd['progress']) == '100':
+                                                                    drs['f'] = True
                                                 for pv in playerdata['verified']:
                                                     if pv['name'].lower() == dr.lower():
                                                         for drs in drolestatus:
@@ -1393,7 +1398,9 @@ async def on_message(message):
                                 for d in DEMONSLIST:
                                     if fbd == d['position']: fbdn = d['name']
                                 for d in fbpd['records']:
-                                    if fbdn.lower() == d['demon']['name'].lower(): fbdf = True
+                                    if fbdn.lower() == d['demon']['name'].lower():
+                                        if d['status'] == 'approved' and str(d['progress']) == '100':
+                                            fbdf = True
                                 for d in fbpd['verified']:
                                     if fbdn.lower() == d['name'].lower(): fbdf = True
                                 if not fbdf:
@@ -1555,7 +1562,8 @@ async def on_message(message):
                     pihd = {'name':"None",'pos':999}
                     for d in pid['records']:
                         if int(d['demon']['position']) < int(pihd['pos']):
-                            pihd['name'] = d['demon']['name']; pihd['pos'] = d['demon']['position']
+                            if d['status'] == 'approved' and str(d['progress']) == '100':
+                                pihd['name'] = d['demon']['name']; pihd['pos'] = d['demon']['position']
                     for d in pid['verified']:
                         if int(d['position']) < int(pihd['pos']):
                             pihd['name'] = d['demon']['name']; pihd['pos'] = d['demon']['position']
@@ -1965,7 +1973,8 @@ async def on_message(message):
                                     if drq == "$REMOVED$": continue
                                     drq = drq.split(";"); drh = []
                                     for d in hcpd['records']:
-                                        if d['demon']['name'] in drq: drh.append(d['demon']['name'])
+                                        if d['status'] == 'approved' and str(d['progress']) == '100':
+                                            if d['demon']['name'] in drq: drh.append(d['demon']['name'])
                                     for d in hcpd['verified']:
                                         if d['name'] in drq: drh.append(d['name'])
                                     drs = []
@@ -2155,7 +2164,9 @@ async def on_message(message):
                                         datasettings(file="pcdata.txt", method="get", line=playerid))
                                     if playerdata is None: continue
                                     playerdemons = ""
-                                    for d in playerdata['records']: playerdemons += d['demon']['name'] + ";"
+                                    for d in playerdata['records']:
+                                        if pd['status'] == 'approved' and str(pd['progress']) == '100':
+                                            playerdemons += d['demon']['name'] + ";"
                                     for d in playerdata['verified']: playerdemons += d['name'] + ";"
                                     playerdemons = playerdemons[:len(playerdemons) - 1]
                                     datasettings(file="pcldot-current.txt",method="add",newkey="PID" + datasettings(file="pcdata.txt", method="get", line=playerid),newvalue=playerdemons)
