@@ -1061,307 +1061,308 @@ async def on_message(message):
             await message.channel.send("**Error**: You are not a Moderator!")
         else:
             global REFRESHACTIVE; global REFRESHIN
-            if REFRESHACTIVE:
+
+            #if REFRESHACTIVE:
+                #await message.add_reaction(emoji=CHAR_FAILED)
+                #await message.channel.send("**" + message.author.name + "**: Refresh in Progress (" + REFRESHIN + ")")
+            #else:
+            if not bothasperms(message.guild):
                 await message.add_reaction(emoji=CHAR_FAILED)
-                await message.channel.send("**" + message.author.name + "**: Refresh in Progress (" + REFRESHIN + ")")
+                await message.channel.send("**Error**: Killbot Circles doesn\'t have permission to add Roles!")
             else:
-                if not bothasperms(message.guild):
-                    await message.add_reaction(emoji=CHAR_FAILED)
-                    await message.channel.send("**Error**: Killbot Circles doesn\'t have permission to add Roles!")
-                else:
-                    REFRESHACTIVE = True
-                    REFRESHIN = message.guild.name
-                    await message.add_reaction(emoji=CHAR_SUCCESS)
-                    await message.channel.send("**" + message.author.name + "**: Manual Refresh started")
-                    pacount = 0; prcount = 0; dacount = 0; drcount = 0; ipcount = []; posacount = 0; posrcount = 0
-                    nddcount = 0
-                    roleconflict = False
-                    print("[Manual Refresh] Roles Refresh started")
-                    rts = datetime.datetime.now()
-                    DEMONSLISTREFRESH()
-                    if alldatakeys("pcdata.txt") != []:
-                        for playerid in alldatakeys("pcdata.txt"):
-                            player = getmember(message.channel.guild, playerid)
-                            if player is None: continue
-                            playerdata = PLAYERDATA(
-                                datasettings(file="pcdata.txt", method="get", line=playerid))
-                            # Points Roles & Log Points
-                            for proleid in alldatakeys("pcproles.txt"):
-                                prole = getrole(message.channel.guild, proleid)
-                                if prole is not None:
-                                    prolepoints = datasettings(file="pcproles.txt", method="get", line=proleid)
-                                    if prolepoints == "$REMOVED$":
-                                        for member in message.guild.members:
-                                            if prole in member.roles:
+                REFRESHACTIVE = True
+                REFRESHIN = message.guild.name
+                await message.add_reaction(emoji=CHAR_SUCCESS)
+                await message.channel.send("**" + message.author.name + "**: Manual Refresh started")
+                pacount = 0; prcount = 0; dacount = 0; drcount = 0; ipcount = []; posacount = 0; posrcount = 0
+                nddcount = 0
+                roleconflict = False
+                print("[Manual Refresh] Roles Refresh started")
+                rts = datetime.datetime.now()
+                DEMONSLISTREFRESH()
+                if alldatakeys("pcdata.txt") != []:
+                    for playerid in alldatakeys("pcdata.txt"):
+                        player = getmember(message.channel.guild, playerid)
+                        if player is None: continue
+                        playerdata = PLAYERDATA(
+                            datasettings(file="pcdata.txt", method="get", line=playerid))
+                        # Points Roles & Log Points
+                        for proleid in alldatakeys("pcproles.txt"):
+                            prole = getrole(message.channel.guild, proleid)
+                            if prole is not None:
+                                prolepoints = datasettings(file="pcproles.txt", method="get", line=proleid)
+                                if prolepoints == "$REMOVED$":
+                                    for member in message.guild.members:
+                                        if prole in member.roles:
+                                            try: await player.remove_roles(prole)
+                                            except discord.errors.Forbidden: roleconflict = True
+                                            prcount += 1
+                                            print("[Points Roles] " + player.name + " had " + prole.name +
+                                                  " removed (Role removed")
+                                            datasettings(file="pcproles.txt",method="remove",line=proleid)
+                                else:
+                                    if prolepoints is not None:
+                                        prolepoints = int(prolepoints)
+                                        try: playerpoints = int(POINTSFORMULA(playerdata))
+                                        except: continue
+                                        logpoints(datasettings(file="pcdata.txt", method="get", line=playerid),
+                                                  playerpoints)
+                                        if playerpoints >= prolepoints:
+                                            if prole not in player.roles:
+                                                try: await player.add_roles(prole)
+                                                except discord.errors.Forbidden:
+                                                    roleconflict = True
+                                                pacount += 1
+                                                print("[Points Roles] " + player.name + " was given " + prole.name +
+                                                      " (required points:" + str(prolepoints) + ",has:" +
+                                                      str(playerpoints) + ")")
+                                        elif playerpoints < prolepoints:
+                                            if prole in player.roles:
                                                 try: await player.remove_roles(prole)
-                                                except discord.errors.Forbidden: roleconflict = True
+                                                except discord.errors.Forbidden:
+                                                    roleconflict = True
                                                 prcount += 1
                                                 print("[Points Roles] " + player.name + " had " + prole.name +
-                                                      " removed (Role removed")
-                                                datasettings(file="pcproles.txt",method="remove",line=proleid)
-                                    else:
-                                        if prolepoints is not None:
-                                            prolepoints = int(prolepoints)
-                                            try: playerpoints = int(POINTSFORMULA(playerdata))
-                                            except: continue
-                                            logpoints(datasettings(file="pcdata.txt", method="get", line=playerid),
-                                                      playerpoints)
-                                            if playerpoints >= prolepoints:
-                                                if prole not in player.roles:
-                                                    try: await player.add_roles(prole)
-                                                    except discord.errors.Forbidden:
-                                                        roleconflict = True
-                                                    pacount += 1
-                                                    print("[Points Roles] " + player.name + " was given " + prole.name +
-                                                          " (required points:" + str(prolepoints) + ",has:" +
-                                                          str(playerpoints) + ")")
-                                            elif playerpoints < prolepoints:
-                                                if prole in player.roles:
-                                                    try: await player.remove_roles(prole)
-                                                    except discord.errors.Forbidden:
-                                                        roleconflict = True
-                                                    prcount += 1
-                                                    print("[Points Roles] " + player.name + " had " + prole.name +
-                                                          " removed (required points:" + str(prolepoints) + ",has:" +
-                                                          str(playerpoints) + ")")
-                            # Demons Roles
-                            for droleid in alldatakeys("pcdroles.txt"):
-                                drole = getrole(message.channel.guild, droleid)
-                                if drole is not None:
-                                    droledemons = datasettings(file="pcdroles.txt", method="get", line=droleid)
-                                    if droledemons == "$REMOVED$":
-                                        for member in message.guild.members:
-                                            if drole in member.roles:
-                                                try: await member.remove_roles(drole)
+                                                      " removed (required points:" + str(prolepoints) + ",has:" +
+                                                      str(playerpoints) + ")")
+                        # Demons Roles
+                        for droleid in alldatakeys("pcdroles.txt"):
+                            drole = getrole(message.channel.guild, droleid)
+                            if drole is not None:
+                                droledemons = datasettings(file="pcdroles.txt", method="get", line=droleid)
+                                if droledemons == "$REMOVED$":
+                                    for member in message.guild.members:
+                                        if drole in member.roles:
+                                            try: await member.remove_roles(drole)
+                                            except discord.errors.Forbidden:
+                                                roleconflict = True
+                                            drcount += 1
+                                            print("[Demons Roles] " + player.name + " had " + drole.name +
+                                                  " removed (Role removed)")
+                                            datasettings(file="pcdroles.txt",method="remove",line=droleid)
+                                else:
+                                    if droledemons is not None:
+                                        droledemons = droledemons.split(";")
+                                        drolestatus = []
+                                        for d in droledemons: drolestatus.append({'n': d, 'f': False})
+                                        if playerdata is None: continue
+                                        for dr in droledemons:
+                                            for pd in playerdata['records']:
+                                                if pd['demon']['name'].lower() == dr.lower():
+                                                    for drs in drolestatus:
+                                                        if drs['n'].lower() == pd['demon']['name'].lower():
+                                                            if pd['status'] == 'approved' and str(
+                                                                    pd['progress']) == '100':
+                                                                drs['f'] = True
+                                            for pv in playerdata['verified']:
+                                                if pv['name'].lower() == dr.lower():
+                                                    for drs in drolestatus:
+                                                        if drs['n'].lower() == pv['name'].lower(): drs['f'] = True
+                                        droledemonsfound = True
+                                        for dr in drolestatus:
+                                            if dr['f'] is False: droledemonsfound = False
+                                        droletext = ""
+                                        for d in droledemons: droletext += d + ", "
+                                        droletext = droletext[:len(droletext) - 2]
+                                        if droledemonsfound:
+                                            if drole not in player.roles:
+                                                try: await player.add_roles(drole)
+                                                except discord.errors.Forbidden:
+                                                    roleconflict = True
+                                                dacount += 1
+                                                print("[Demons Roles] " + player.name + " was given " + drole.name +
+                                                      " (required demons:" + str(droletext) + ")")
+                                        elif not droledemonsfound:
+                                            if drole in player.roles:
+                                                try: await player.remove_roles(drole)
                                                 except discord.errors.Forbidden:
                                                     roleconflict = True
                                                 drcount += 1
                                                 print("[Demons Roles] " + player.name + " had " + drole.name +
-                                                      " removed (Role removed)")
-                                                datasettings(file="pcdroles.txt",method="remove",line=droleid)
+                                                      " removed (required demons:" + str(droletext) + ")")
+                        # Timed Bans
+                        if alldatakeys("pctimedbans.txt") != []:
+                            for ugv in alldatakeys("pctimedbans.txt"):
+                                ugid = str(ugv).split("+"); g = getguild(ugid[1]); u = getmember(g, ugid[0])
+                                if u is not None and g is not None:
+                                    tbt = datasettings(file="pctimedbans.txt", method="get", line=ugv); tbt = tbt.split("-")
+                                    tbt = datetime.datetime(day=int(tbt[2]), month=int(tbt[1]), year=int(tbt[0]))
+                                    if tbt <= datetime.datetime.now():
+                                        tbdc = None
+                                        for guild in client.guilds:
+                                            for channel in guild:
+                                                if str(channel.id) == datasettings(file="pcvars.txt", method="get",
+                                                                                   line="FEEDBACKCHANNEL"):
+                                                    tbdc = channel
+                                        try: await g.unban(u)
+                                        except: pass
+                                        datasettings(file="pctimedbans.txt", method="remove", line=ugv)
+                                        await tbdc.send(
+                                            "A Timed Ban has expired!\n**Server**: " + g.name + "\n**User**: " + u.name)
+                                        print("[Timed Ban] Unbanned " + u.name)
+                        # Positional Roles
+                        if alldatakeys("pcposroles.txt") != []:
+                            for posroleid in alldatakeys("pcposroles.txt"):
+                                posrole = getrole(message.channel.guild,posroleid)
+                                if posrole is not None:
+                                    posdata = datasettings(file="pcposroles.txt",method="get",line=str(posrole.id))
+                                    if posdata == "$REMOVED$":
+                                        for member in message.guild.members:
+                                            if posrole in member.roles:
+                                                try: await player.remove_roles(posrole)
+                                                except discord.errors.Forbidden:
+                                                    roleconflict = True
+                                                posrcount += 1
+                                                print("[Positonal Roles] " + player.name + " had " + posrole.name +
+                                                      "removed (Role removed)")
+                                                datasettings(file="pcposroles.txt", method="remove", line=posroleid)
                                     else:
-                                        if droledemons is not None:
-                                            droledemons = droledemons.split(";")
-                                            drolestatus = []
-                                            for d in droledemons: drolestatus.append({'n': d, 'f': False})
-                                            if playerdata is None: continue
-                                            for dr in droledemons:
-                                                for pd in playerdata['records']:
-                                                    if pd['demon']['name'].lower() == dr.lower():
-                                                        for drs in drolestatus:
-                                                            if drs['n'].lower() == pd['demon']['name'].lower():
-                                                                if pd['status'] == 'approved' and str(
-                                                                        pd['progress']) == '100':
-                                                                    drs['f'] = True
-                                                for pv in playerdata['verified']:
-                                                    if pv['name'].lower() == dr.lower():
-                                                        for drs in drolestatus:
-                                                            if drs['n'].lower() == pv['name'].lower(): drs['f'] = True
-                                            droledemonsfound = True
-                                            for dr in drolestatus:
-                                                if dr['f'] is False: droledemonsfound = False
-                                            droletext = ""
-                                            for d in droledemons: droletext += d + ", "
-                                            droletext = droletext[:len(droletext) - 2]
-                                            if droledemonsfound:
-                                                if drole not in player.roles:
-                                                    try: await player.add_roles(drole)
+                                        posdata = posdata.split("-"); posreq = int(posdata[0]); posnum = int(posdata[1])
+                                        pposfound = 0
+                                        playerhasdemons = True
+                                        try: pbt = playerdata['records']
+                                        except:
+                                            ipcount.append({'name': player, 'pid': datasettings(file="pcdata.txt",
+                                                                                                method="get", line=playerid)})
+                                            playerhasdemons = False
+                                        if playerhasdemons:
+                                            for pb in playerdata['records']:
+                                                if int(pb['demon']['position']) <= posreq: pposfound += 1
+                                            for pv in playerdata['verified']:
+                                                if int(pv['position']) <= posreq: pposfound += 1
+                                            if pposfound >= posnum:
+                                                if posrole not in player.roles:
+                                                    try: await player.add_roles(posrole)
                                                     except discord.errors.Forbidden:
                                                         roleconflict = True
-                                                    dacount += 1
-                                                    print("[Demons Roles] " + player.name + " was given " + drole.name +
-                                                          " (required demons:" + str(droletext) + ")")
-                                            elif not droledemonsfound:
-                                                if drole in player.roles:
-                                                    try: await player.remove_roles(drole)
-                                                    except discord.errors.Forbidden:
-                                                        roleconflict = True
-                                                    drcount += 1
-                                                    print("[Demons Roles] " + player.name + " had " + drole.name +
-                                                          " removed (required demons:" + str(droletext) + ")")
-                            # Timed Bans
-                            if alldatakeys("pctimedbans.txt") != []:
-                                for ugv in alldatakeys("pctimedbans.txt"):
-                                    ugid = str(ugv).split("+"); g = getguild(ugid[1]); u = getmember(g, ugid[0])
-                                    if u is not None and g is not None:
-                                        tbt = datasettings(file="pctimedbans.txt", method="get", line=ugv); tbt = tbt.split("-")
-                                        tbt = datetime.datetime(day=int(tbt[2]), month=int(tbt[1]), year=int(tbt[0]))
-                                        if tbt <= datetime.datetime.now():
-                                            tbdc = None
-                                            for guild in client.guilds:
-                                                for channel in guild:
-                                                    if str(channel.id) == datasettings(file="pcvars.txt", method="get",
-                                                                                       line="FEEDBACKCHANNEL"):
-                                                        tbdc = channel
-                                            try: await g.unban(u)
-                                            except: pass
-                                            datasettings(file="pctimedbans.txt", method="remove", line=ugv)
-                                            await tbdc.send(
-                                                "A Timed Ban has expired!\n**Server**: " + g.name + "\n**User**: " + u.name)
-                                            print("[Timed Ban] Unbanned " + u.name)
-                            # Positional Roles
-                            if alldatakeys("pcposroles.txt") != []:
-                                for posroleid in alldatakeys("pcposroles.txt"):
-                                    posrole = getrole(message.channel.guild,posroleid)
-                                    if posrole is not None:
-                                        posdata = datasettings(file="pcposroles.txt",method="get",line=str(posrole.id))
-                                        if posdata == "$REMOVED$":
-                                            for member in message.guild.members:
-                                                if posrole in member.roles:
+                                                    posacount += 1
+                                                    print("[Positonal Roles] " + player.name + " was given " + posrole.name +
+                                                          " (base position:" + str(posreq) + ",number required:" + str(posnum) + ",has:"
+                                                          + str(pposfound))
+                                            elif pposfound < posnum:
+                                                if posrole in player.roles:
                                                     try: await player.remove_roles(posrole)
                                                     except discord.errors.Forbidden:
                                                         roleconflict = True
                                                     posrcount += 1
                                                     print("[Positonal Roles] " + player.name + " had " + posrole.name +
-                                                          "removed (Role removed)")
-                                                    datasettings(file="pcposroles.txt", method="remove", line=posroleid)
-                                        else:
-                                            posdata = posdata.split("-"); posreq = int(posdata[0]); posnum = int(posdata[1])
-                                            pposfound = 0
-                                            playerhasdemons = True
-                                            try: pbt = playerdata['records']
-                                            except:
-                                                ipcount.append({'name': player, 'pid': datasettings(file="pcdata.txt",
-                                                                                                    method="get", line=playerid)})
-                                                playerhasdemons = False
-                                            if playerhasdemons:
-                                                for pb in playerdata['records']:
-                                                    if int(pb['demon']['position']) <= posreq: pposfound += 1
-                                                for pv in playerdata['verified']:
-                                                    if int(pv['position']) <= posreq: pposfound += 1
-                                                if pposfound >= posnum:
-                                                    if posrole not in player.roles:
-                                                        try: await player.add_roles(posrole)
-                                                        except discord.errors.Forbidden:
-                                                            roleconflict = True
-                                                        posacount += 1
-                                                        print("[Positonal Roles] " + player.name + " was given " + posrole.name +
-                                                              " (base position:" + str(posreq) + ",number required:" + str(posnum) + ",has:"
-                                                              + str(pposfound))
-                                                elif pposfound < posnum:
-                                                    if posrole in player.roles:
-                                                        try: await player.remove_roles(posrole)
-                                                        except discord.errors.Forbidden:
-                                                            roleconflict = True
-                                                        posrcount += 1
-                                                        print("[Positonal Roles] " + player.name + " had " + posrole.name +
-                                                              "removed (base position:" + str(posreq) + ",number required:" + str(posnum) +
-                                                              ",has:" + str(pposfound))
-                            # LDOT Refresh
-                            if datasettings(file="pcldot-current.txt",method="get",line="DEMON") != "NONE" or \
-                                datasettings(file="pcldot-current.txt", method="get", line="DEMON") is not None:
-                                ldotdemons = str(datasettings(file="pcldot-current.txt",method="get",line="PID" + playerid)).split(";")
-                                playertotalbeaten = []
-                                for d in playerdata['records']: playertotalbeaten.append(d['demon']['name'])
-                                for d in playerdata['verified']: playertotalbeaten.append(d['name'])
-                                if not samelists(ldotdemons,playertotalbeaten):
-                                    playernewdemons = differencesinlists(ldotdemons,playertotalbeaten)
-                                    if len(playernewdemons) > 0:
-                                        ldotreappend = ldotdemons
-                                        for nd in playernewdemons:
-                                            ldotreappend.append("+" + nd + "[" + condensedatetime(datetime.datetime.now()) + "]")
-                                        pndt = ""
-                                        for pnd in playernewdemons:
-                                            pndt += pnd + ";"
-                                        pndt = pndt[:len(pndt) - 1]
-                                        datasettings(file="pcldot-current.txt", method="change", line="PID" + playerid,newvalue=pndt)
-                            # Invalid Players
-                            if playerdata is None: ipcount.append({'name':player,'pid':datasettings(
-                                file="pcdata.txt", method="get", line=playerid)})
-                    # LDOT Message
-                    if datasettings(file="pcldot-current.txt", method="get", line="DEMON") != "NONE" and \
-                                    datasettings(file="pcldot-current.txt", method="get", line="DEMON") is not None and \
-                                    datasettings(file="pcldot-current.txt", method="get", line="DEMON") != "":
-                        for d in alldatakeys("pcmods.txt"):
-                            if str(d).startswith("LM"):
-                                dr = str(d).replace("LM",""); dr = dr.split("-")
-                                ds = getguild(dr[0])
-                                if ds is None: continue
-                                dc = getchannel(ds,dr[1])
-                                if dc is None: continue
-                                dm = datasettings(file="pcmods.txt",method="get",line=d)
-                                async for m in dc.history(limit=200):
-                                    if str(m.id) == dm:
-                                        try:
-                                            await m.edit(content=formatldotlb())
-                                        except: pass
-                    # LDOT Finish Check
-                    if datasettings(file="pcldot-current.txt", method="get", line="DEMON") != "NONE" and \
-                                    datasettings(file="pcldot-current.txt", method="get", line="DEMON") is not None and \
-                        datasettings(file="pcldot-current.txt", method="get", line="DEMON") != "":
-                        LDOT_END = strtodatetime(datasettings(file="pcldot-current.txt", method="get", line="END"))
-                        ldotr = comparedates(LDOT_END,strtodatetime(formattoday()))
-                        if ldotr != LDOT_END:
-                            LDOT_LEADERBOARDS = ldotleaderboards()
-                            LDOT_DEMON = datasettings(file="pcldot-current.txt", method="get", line="DEMON")
-                            LDOT_DURATION = datasettings(file="pcldot-current.txt", method="get", line="DURATION")
-                            LDOT_END = condensedatetime(
-                                datasettings(file="pcldot-current.txt", method="get", line="END"))
-                            LDOT_START = datasettings(file="pcldot-current.txt", method="get", line="START")
-                            LDOT_ID = ldotid()
-                            ldotline = "---------------"
-                            datasettings(file="pcldot-lb.txt",method="add",newkey=ldotline,newvalue=ldotline)
-                            datasettings(file="pcldot-lb.txt", method="add", newkey=LDOT_ID + "DEMON", newvalue=LDOT_DEMON)
-                            datasettings(file="pcldot-lb.txt", method="add", newkey=LDOT_ID + "DURATION", newvalue=LDOT_DURATION)
-                            datasettings(file="pcldot-lb.txt", method="add", newkey=LDOT_ID + "END", newvalue=LDOT_END)
-                            datasettings(file="pcldot-lb.txt", method="add", newkey=LDOT_ID + "START", newvalue=LDOT_START)
-                            datasettings(file="pcldot-lb.txt", method="add", newkey=LDOT_ID + "LB", newvalue=str(LDOT_LEADERBOARDS))
-                            datasettings(file="pcldot-lb.txt", method="add", newkey=ldotline, newvalue=ldotline)
-                            cleardata("pcldot-current.txt")
-                    # New Demon Channels
-                    ndcl = strtolist(datasettings(file="pcvars.txt", method="get", line="NEWDEMONSCHANNELS"))
-                    if len(ndcl) != 0:
-                        for dc in ndcl:
-                            for channel in message.guild.channels:
-                                if str(channel.id) == dc:
-                                    dmd = []
-                                    async for dm in channel.history(limit=20):
-                                        if dm.author.id == 358598636436979713 and dm.created_at > \
-                                                (datetime.datetime.now() - datetime.timedelta(days=13)):
-                                            try: dme = dm.embeds[0].to_dict()
-                                            except: continue
-                                            for dmef in dme['fields']:
-                                                if "`u!level " in dmef['value']:
-                                                    p1 = dmef['value'].index("`") + 1; p = dmef['value'][p1:]
-                                                    p2 = p.index("`"); p = p[:p2]; p = p.replace("`","")
-                                                    p = p.replace("u!level ","")
-                                                    ldata = getanylevel(p)
-                                                    if ldata != []:
-                                                        ldifa = ["Hard Demon","Insane Demon","Extreme Demon"]
-                                                        if ldata["Difficulty"] not in ldifa:
-                                                            dmd.append(dm)
-                                                            nddcount += 1
-                                                            print("[NDCD] Deleted " + ldata["Name"] + " because it is "
-                                                                  + ldata['Difficulty'] + " [Guild:" + message.guild.name
-                                                                  + "]")
-                                    await channel.delete_messages(dmd)
-                    print("[Manual Refresh] Roles Refresh finished")
-                    if roleconflict:
-                        await message.channel.send("*(Some roles could not be added due to them having a higher "
-                                                   "hierarchy than this Bot\'s Role)*")
-                    rtf = datetime.datetime.now() - rts
-                    emb = discord.Embed(title="Manual Refresh " + condensedatetime(datetime.datetime.now()), description="Time Elapsed: " + datetimetoshort(rtf), color=0x5c5c5c)
-                    emb.add_field(name="Points Roles",value="Added " + str(pacount) + " | Removed " + str(prcount),
-                                  inline=True)
-                    emb.add_field(name="Demons Roles", value="Added " + str(dacount) + " | Removed " + str(drcount),
-                                  inline=True)
-                    emb.add_field(name="Positional Roles", value="Added " + str(posacount) + " | Removed " + str(posrcount),
-                                  inline=True)
-                    emb.add_field(name="Non-Demons from New-Rated-Demons Channels", value="Removed " + str(nddcount),
-                                  inline=True)
-                    await message.channel.send("**" + message.author.name + "**: Manual Refresh finished")
-                    await message.channel.send(embed=emb)
-                    if len(ipcount) > 0:
-                        ipn = ""
-                        for i in ipcount:
-                            ipn += i['name'].name + ": " + str(i['pid']) + ", "
-                            datasettings(file="pcdata.txt",method="remove",line=str(i['name'].id))
-                        ipn = ipn[:len(ipn) - 2]
-                        await message.channel.send("**NOTE!** The following players were removed from the Player Link "
-                                                   "database because they had Invalid IDs or haven't beaten List Demons:\n" + ipn)
-                    REFRESHACTIVE = False
-                    REFRESHIN = None
-                    await client.change_presence(activity=discord.Game(name=(DEMONSLIST[random.randint(0,99)])['name']))
+                                                          "removed (base position:" + str(posreq) + ",number required:" + str(posnum) +
+                                                          ",has:" + str(pposfound))
+                        # LDOT Refresh
+                        if datasettings(file="pcldot-current.txt",method="get",line="DEMON") != "NONE" or \
+                            datasettings(file="pcldot-current.txt", method="get", line="DEMON") is not None:
+                            ldotdemons = str(datasettings(file="pcldot-current.txt",method="get",line="PID" + playerid)).split(";")
+                            playertotalbeaten = []
+                            for d in playerdata['records']: playertotalbeaten.append(d['demon']['name'])
+                            for d in playerdata['verified']: playertotalbeaten.append(d['name'])
+                            if not samelists(ldotdemons,playertotalbeaten):
+                                playernewdemons = differencesinlists(ldotdemons,playertotalbeaten)
+                                if len(playernewdemons) > 0:
+                                    ldotreappend = ldotdemons
+                                    for nd in playernewdemons:
+                                        ldotreappend.append("+" + nd + "[" + condensedatetime(datetime.datetime.now()) + "]")
+                                    pndt = ""
+                                    for pnd in playernewdemons:
+                                        pndt += pnd + ";"
+                                    pndt = pndt[:len(pndt) - 1]
+                                    datasettings(file="pcldot-current.txt", method="change", line="PID" + playerid,newvalue=pndt)
+                        # Invalid Players
+                        if playerdata is None: ipcount.append({'name':player,'pid':datasettings(
+                            file="pcdata.txt", method="get", line=playerid)})
+                # LDOT Message
+                if datasettings(file="pcldot-current.txt", method="get", line="DEMON") != "NONE" and \
+                                datasettings(file="pcldot-current.txt", method="get", line="DEMON") is not None and \
+                                datasettings(file="pcldot-current.txt", method="get", line="DEMON") != "":
+                    for d in alldatakeys("pcmods.txt"):
+                        if str(d).startswith("LM"):
+                            dr = str(d).replace("LM",""); dr = dr.split("-")
+                            ds = getguild(dr[0])
+                            if ds is None: continue
+                            dc = getchannel(ds,dr[1])
+                            if dc is None: continue
+                            dm = datasettings(file="pcmods.txt",method="get",line=d)
+                            async for m in dc.history(limit=200):
+                                if str(m.id) == dm:
+                                    try:
+                                        await m.edit(content=formatldotlb())
+                                    except: pass
+                # LDOT Finish Check
+                if datasettings(file="pcldot-current.txt", method="get", line="DEMON") != "NONE" and \
+                                datasettings(file="pcldot-current.txt", method="get", line="DEMON") is not None and \
+                    datasettings(file="pcldot-current.txt", method="get", line="DEMON") != "":
+                    LDOT_END = strtodatetime(datasettings(file="pcldot-current.txt", method="get", line="END"))
+                    ldotr = comparedates(LDOT_END,strtodatetime(formattoday()))
+                    if ldotr != LDOT_END:
+                        LDOT_LEADERBOARDS = ldotleaderboards()
+                        LDOT_DEMON = datasettings(file="pcldot-current.txt", method="get", line="DEMON")
+                        LDOT_DURATION = datasettings(file="pcldot-current.txt", method="get", line="DURATION")
+                        LDOT_END = condensedatetime(
+                            datasettings(file="pcldot-current.txt", method="get", line="END"))
+                        LDOT_START = datasettings(file="pcldot-current.txt", method="get", line="START")
+                        LDOT_ID = ldotid()
+                        ldotline = "---------------"
+                        datasettings(file="pcldot-lb.txt",method="add",newkey=ldotline,newvalue=ldotline)
+                        datasettings(file="pcldot-lb.txt", method="add", newkey=LDOT_ID + "DEMON", newvalue=LDOT_DEMON)
+                        datasettings(file="pcldot-lb.txt", method="add", newkey=LDOT_ID + "DURATION", newvalue=LDOT_DURATION)
+                        datasettings(file="pcldot-lb.txt", method="add", newkey=LDOT_ID + "END", newvalue=LDOT_END)
+                        datasettings(file="pcldot-lb.txt", method="add", newkey=LDOT_ID + "START", newvalue=LDOT_START)
+                        datasettings(file="pcldot-lb.txt", method="add", newkey=LDOT_ID + "LB", newvalue=str(LDOT_LEADERBOARDS))
+                        datasettings(file="pcldot-lb.txt", method="add", newkey=ldotline, newvalue=ldotline)
+                        cleardata("pcldot-current.txt")
+                # New Demon Channels
+                ndcl = strtolist(datasettings(file="pcvars.txt", method="get", line="NEWDEMONSCHANNELS"))
+                if len(ndcl) != 0:
+                    for dc in ndcl:
+                        for channel in message.guild.channels:
+                            if str(channel.id) == dc:
+                                dmd = []
+                                async for dm in channel.history(limit=20):
+                                    if dm.author.id == 358598636436979713 and dm.created_at > \
+                                            (datetime.datetime.now() - datetime.timedelta(days=13)):
+                                        try: dme = dm.embeds[0].to_dict()
+                                        except: continue
+                                        for dmef in dme['fields']:
+                                            if "`u!level " in dmef['value']:
+                                                p1 = dmef['value'].index("`") + 1; p = dmef['value'][p1:]
+                                                p2 = p.index("`"); p = p[:p2]; p = p.replace("`","")
+                                                p = p.replace("u!level ","")
+                                                ldata = getanylevel(p)
+                                                if ldata != []:
+                                                    ldifa = ["Hard Demon","Insane Demon","Extreme Demon"]
+                                                    if ldata["Difficulty"] not in ldifa:
+                                                        dmd.append(dm)
+                                                        nddcount += 1
+                                                        print("[NDCD] Deleted " + ldata["Name"] + " because it is "
+                                                              + ldata['Difficulty'] + " [Guild:" + message.guild.name
+                                                              + "]")
+                                await channel.delete_messages(dmd)
+                print("[Manual Refresh] Roles Refresh finished")
+                if roleconflict:
+                    await message.channel.send("*(Some roles could not be added due to them having a higher "
+                                               "hierarchy than this Bot\'s Role)*")
+                rtf = datetime.datetime.now() - rts
+                emb = discord.Embed(title="Manual Refresh " + condensedatetime(datetime.datetime.now()), description="Time Elapsed: " + datetimetoshort(rtf), color=0x5c5c5c)
+                emb.add_field(name="Points Roles",value="Added " + str(pacount) + " | Removed " + str(prcount),
+                              inline=True)
+                emb.add_field(name="Demons Roles", value="Added " + str(dacount) + " | Removed " + str(drcount),
+                              inline=True)
+                emb.add_field(name="Positional Roles", value="Added " + str(posacount) + " | Removed " + str(posrcount),
+                              inline=True)
+                emb.add_field(name="Non-Demons from New-Rated-Demons Channels", value="Removed " + str(nddcount),
+                              inline=True)
+                await message.channel.send("**" + message.author.name + "**: Manual Refresh finished")
+                await message.channel.send(embed=emb)
+                if len(ipcount) > 0:
+                    ipn = ""
+                    for i in ipcount:
+                        ipn += i['name'].name + ": " + str(i['pid']) + ", "
+                        datasettings(file="pcdata.txt",method="remove",line=str(i['name'].id))
+                    ipn = ipn[:len(ipn) - 2]
+                    await message.channel.send("**NOTE!** The following players were removed from the Player Link "
+                                               "database because they had Invalid IDs or haven't beaten List Demons:\n" + ipn)
+                REFRESHACTIVE = False
+                REFRESHIN = None
+                await client.change_presence(activity=discord.Game(name=(DEMONSLIST[random.randint(0,99)])['name']))
     if str(message.content).startswith("??feedback "):
         if str(message.author.id) in alldatakeys("pcfb.txt"):
             await message.add_reaction(emoji=CHAR_FAILED)
@@ -2261,7 +2262,7 @@ async def on_message(message):
                 or str(message.content).startswith("hey bot reject") or str(message.content).startswith("??records accept")\
                 or str(message.content).startswith("??records reject"):
             NRREVIEWRECORD = message.author.name
-        if str(message.content).startswith("??records get"): NRREVIEWRECORD = None
+        if str(message.content).startswith("??records get") or str(message.content).startswith("??record "): NRREVIEWRECORD = None
     if str(message.content).startswith("??rejectmessage "):
         if inallowedguild(message.guild,message.author):
             rmm = str(message.content).replace("??rejectmessage ",""); rmp = paramquotationlist(rmm)

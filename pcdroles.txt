@@ -7,7 +7,7 @@
 507357620039057409=Awakening Horus
 508015978035150861=Artificial Ideology;A Bizarre Phantasm;The Hell Factory
 506230027059200032=Sonic Wave;Bausha Vortex;Down Bass
-508012446250958849=AcropoliX;Plasma Pulse III;Black Blizzard;Hatred;Quantum Processing;Erebus;Plasma Pulse Finale
+508012446250958849=Plasma Pulse Finale;Erebus;Stalemate Redux;Hatred;Quantum Processing;Black Blizzard;AcropoliX
 511934829055442947=Celestial Force;Cadrega City;Factory Realm X;Aurora;Novalis;Artificial Dream
 508025953255948298=Black Blizzard;Conical Depression;Heartbeat;Elite Z Rebirth
 508026010642415616=Cadrega City;Bausha Vortex;ATMarbl
