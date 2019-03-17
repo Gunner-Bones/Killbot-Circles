@@ -580,51 +580,52 @@ async def on_guild_join(guild):
 
 @client.event
 async def on_reaction_add(reaction, user):
-    if inallowedguild(reaction.message.guild,user):
-        smrv = True; smre = None; m = reaction.message
-        try: smre = m.embeds[0].to_dict()
-        except: smrv = False
-        if smrv:
-            smr = None
-            try: smr = smre['fields']
+    if reaction.message.guild is not None:
+        if inallowedguild(reaction.message.guild,user):
+            smrv = True; smre = None; m = reaction.message
+            try: smre = m.embeds[0].to_dict()
             except: smrv = False
             if smrv:
-                smrh = smr[1]['value'].split("\n")
-                smrh = smrh[1].replace("**ID**: ", "")
-                smf = False
-                for h in alldatakeys("pcn.txt"):
-                    if datasettings(file="pcn.txt", method="get", line=h) == smrh:
-                        smf = True
-                if not smf:
-                    smf = None
-                    for ph in alldatakeys("pcdata.txt"):
-                        if datasettings(file="pcdata.txt", method="get", line=ph) == smrh:
-                            smf = ph
-                    if smf is not None:
-                        hu = getglobalmember(smf)
-                        if hu is not None:
-                            smf = False
-                            try:
-                                smrd = smr[0]['value'].split("\n")
-                                smrd = smrd[0].replace("**Name**: ", "")
-                                smrdes = smre['description'].split("\n")
-                                smrp = smrdes[1].replace("**Progress**: ", "")
-                            except:
-                                smf = True
-                            if not smf:
-                                global NRREVIEWRM
-                                smrm = None; smnr = None; smnc = None
-                                for r in NRREVIEWRM:
-                                    if r[1] == user: smrm = r[0]; smnr = r; smnc = r[2]
-                                if smrm is not None:
-                                    if reaction.emoji == CHAR_SENT:
-                                        smrmr = "*Notification from the Pointercrate Team*\n"
-                                        smrmr += hu.name + ", your record **" + smrp + "** on **" + smrd + "** has been"
-                                        smrmr += "\n REJECTED for the following reason(s): " + smrm + "\n"
-                                        smrmr += "[Reason written by " + user.name + "]"
-                                        await hu.send(smrmr)
-                                        await smnc.send("**" + user.name + "**, Rejection Reason sent!")
-                                        NRREVIEWRM.remove(smnr)
+                smr = None
+                try: smr = smre['fields']
+                except: smrv = False
+                if smrv:
+                    smrh = smr[1]['value'].split("\n")
+                    smrh = smrh[1].replace("**ID**: ", "")
+                    smf = False
+                    for h in alldatakeys("pcn.txt"):
+                        if datasettings(file="pcn.txt", method="get", line=h) == smrh:
+                            smf = True
+                    if not smf:
+                        smf = None
+                        for ph in alldatakeys("pcdata.txt"):
+                            if datasettings(file="pcdata.txt", method="get", line=ph) == smrh:
+                                smf = ph
+                        if smf is not None:
+                            hu = getglobalmember(smf)
+                            if hu is not None:
+                                smf = False
+                                try:
+                                    smrd = smr[0]['value'].split("\n")
+                                    smrd = smrd[0].replace("**Name**: ", "")
+                                    smrdes = smre['description'].split("\n")
+                                    smrp = smrdes[1].replace("**Progress**: ", "")
+                                except:
+                                    smf = True
+                                if not smf:
+                                    global NRREVIEWRM
+                                    smrm = None; smnr = None; smnc = None
+                                    for r in NRREVIEWRM:
+                                        if r[1] == user: smrm = r[0]; smnr = r; smnc = r[2]
+                                    if smrm is not None:
+                                        if reaction.emoji == CHAR_SENT:
+                                            smrmr = "*Notification from the Pointercrate Team*\n"
+                                            smrmr += hu.name + ", your record **" + smrp + "** on **" + smrd + "** has been"
+                                            smrmr += "\n REJECTED for the following reason(s): " + smrm + "\n"
+                                            smrmr += "[Reason written by " + user.name + "]"
+                                            await hu.send(smrmr)
+                                            await smnc.send("**" + user.name + "**, Rejection Reason sent!")
+                                            NRREVIEWRM.remove(smnr)
 
 
 REFRESHACTIVE = False
@@ -1253,19 +1254,23 @@ async def on_message(message):
                             datasettings(file="pcldot-current.txt", method="get", line="DEMON") is not None:
                             ldotdemons = str(datasettings(file="pcldot-current.txt",method="get",line="PID" + playerid)).split(";")
                             playertotalbeaten = []
-                            for d in playerdata['records']: playertotalbeaten.append(d['demon']['name'])
-                            for d in playerdata['verified']: playertotalbeaten.append(d['name'])
-                            if not samelists(ldotdemons,playertotalbeaten):
-                                playernewdemons = differencesinlists(ldotdemons,playertotalbeaten)
-                                if len(playernewdemons) > 0:
-                                    ldotreappend = ldotdemons
-                                    for nd in playernewdemons:
-                                        ldotreappend.append("+" + nd + "[" + condensedatetime(datetime.datetime.now()) + "]")
-                                    pndt = ""
-                                    for pnd in playernewdemons:
-                                        pndt += pnd + ";"
-                                    pndt = pndt[:len(pndt) - 1]
-                                    datasettings(file="pcldot-current.txt", method="change", line="PID" + playerid,newvalue=pndt)
+                            if playerdata is not None:
+                                if len(playerdata['records']) >= 1:
+                                    for d in playerdata['records']:
+                                        if d['demon'] is not None:
+                                            playertotalbeaten.append(d['demon']['name'])
+                                for d in playerdata['verified']: playertotalbeaten.append(d['name'])
+                                if not samelists(ldotdemons,playertotalbeaten):
+                                    playernewdemons = differencesinlists(ldotdemons,playertotalbeaten)
+                                    if len(playernewdemons) > 0:
+                                        ldotreappend = ldotdemons
+                                        for nd in playernewdemons:
+                                            ldotreappend.append("+" + nd + "[" + condensedatetime(datetime.datetime.now()) + "]")
+                                        pndt = ""
+                                        for pnd in playernewdemons:
+                                            pndt += pnd + ";"
+                                        pndt = pndt[:len(pndt) - 1]
+                                        datasettings(file="pcldot-current.txt", method="change", line="PID" + playerid,newvalue=pndt)
                         # Invalid Players
                         if playerdata is None: ipcount.append({'name':player,'pid':datasettings(
                             file="pcdata.txt", method="get", line=playerid)})
@@ -2172,6 +2177,77 @@ async def on_message(message):
                                     playerdemons = playerdemons[:len(playerdemons) - 1]
                                     datasettings(file="pcldot-current.txt",method="add",newkey="PID" + datasettings(file="pcdata.txt", method="get", line=playerid),newvalue=playerdemons)
                             await message.channel.send("**" + message.author.name + "**: LDOT Started!\n**DEMON**: " + LDOT_DEMON + "\n**DURATION**: " + LDOT_DURATION)
+    if str(message.content).startswith("??callvote "):
+        #callvote "role" "topic"
+        if not memberadmin(message.author):
+            await message.add_reaction(emoji=CHAR_FAILED)
+            await message.channel.send("**Error**: You are not an Administrator!")
+        else:
+            cvm = str(message.content).replace("??callvote ",""); cvp = paramquotationlist(cvm)
+            if cvp is None:
+                await message.add_reaction(emoji=CHAR_FAILED)
+                await message.channel.send("**Error**: Invalid parameters!")
+            else:
+                if len(cvp) != 2:
+                    await message.add_reaction(emoji=CHAR_FAILED)
+                    await message.channel.send("**Error**: Invalid parameters!")
+                else:
+                    cvr = getrole(message.guild,cvp[0])
+                    if cvr is None:
+                        await message.add_reaction(emoji=CHAR_FAILED)
+                        await message.channel.send("**Error**: Invalid role!")
+                    else:
+                        cvt = cvp[1]
+                        if len(cvt) == 0:
+                            await message.add_reaction(emoji=CHAR_FAILED)
+                            await message.channel.send("**Error**: Invalid topic!")
+                        else:
+                            cvid = str(random.randint(10000,99999))
+                            for vid in alldatakeys("pcvotes.txt"):
+                                if vid == cvid: cvid = str(random.randint(10000, 99999))
+                            datasettings(file="pcvotes.txt",method="add",newkey=cvid,newvalue=str(message.guild.id) + ";" + \
+                                         str(cvr.id) + ";" + cvt)
+                            await message.add_reaction(emoji=CHAR_SUCCESS)
+                            await message.channel.send("**" + message.author.name + "**: Vote created!\n"
+                                                                                    "*Question*: " + cvt + "\n"
+                                                                                    "*Who can Vote*: " + cvr.name +
+                                                       "\nDM Killbot Circles with *vote \"" + cvid + "\" \"response\"* to vote!")
+    if str(message.content).startswith("??voteresults "):
+        if memberadmin(message.author):
+            cvrm = str(message.content).replace("??voteresults ",""); cvrp = paramquotationlist(cvrm)
+            if cvrp is None:
+                await message.add_reaction(emoji=CHAR_FAILED)
+                await message.channel.send("**Error**: Invalid parameters!")
+            else:
+                if len(cvrp) != 1:
+                    await message.add_reaction(emoji=CHAR_FAILED)
+                    await message.channel.send("**Error**: Invalid parameters!")
+                else:
+                    cvid = cvrp[0]; cvif = False; cvd = ""
+                    for vid in alldatakeys("pcvotes.txt"):
+                        if vid == cvid:
+                            cvif = True
+                            cvd = datasettings(file="pcvotes.txt",method="get",line=vid)
+                            break
+                    if not cvif:
+                        await message.add_reaction(emoji=CHAR_FAILED)
+                        await message.channel.send("**Error**: Invalid vote ID!")
+                    else:
+                        cvd = cvd.split(";")
+                        cvt = cvd[2]; cvg = getguild(cvd[0])
+                        cvrr = "Vote Results\n"
+                        cvrr += "**Server**: " + cvg.name + "\n"
+                        cvrr += "**Topic**: " + cvt + "\n"
+                        cvrr += "*Responses*\n"
+                        for vid in alldatakeys("pcvotes.txt"):
+                            if str(vid).startswith("RESP" + cvid):
+                                vidmes = str(vid).split("-")
+                                vidm = getmember(cvg,vidmes[1])
+                                if vidm is None: continue
+                                cvrr += vidm.name + ": " + datasettings(file="pcvotes.txt",method="get",line=vid) + "\n"
+                        await message.add_reaction(emoji=CHAR_SUCCESS)
+                        await message.channel.send("**" + message.author.name + "**: Vote Results sent to your Private Messages!")
+                        await message.author.send(cvrr)
     if str(message.content).startswith("??kchelp"):
         if membermoderator(message.author):
             hm1 = "**Killbot Circles Command List**\n*Coded by GunnerBones, Pointercrate system by Stadust*\n"
@@ -2229,6 +2305,10 @@ async def on_message(message):
             hm2 += "Shows points increase/decrease after list changes\n"
             hm2 += "??howcloseto - [Anyone][GLOBAL]\n"
             hm2 += "Shows how close you are to a Points/Demons/Positional role\n"
+            hm2 += "??callvote \"role name\" \"question\" - [Admin][LOCAL]\n"
+            hm2 += "Calls a vote for that Server where only those with the Role can vote\n"
+            hm2 += "??voteresults \"vote ID\" - [Admin][LOCAL]\n"
+            hm2 += "DMs the Vote Results\n"
             await message.author.send(hm1)
             time.sleep(1)
             await message.author.send(hm2)
@@ -2238,6 +2318,60 @@ async def on_message(message):
         else:
             await message.add_reaction(emoji=CHAR_FAILED)
             await message.channel.send("**Error**: You are not a Moderator!")
+    if message.guild is None and str(message.content).startswith("vote "):
+        cvm = str(message.content).replace("vote ",""); cvp = paramquotationlist(cvm)
+        if cvp is None:
+            await message.add_reaction(emoji=CHAR_FAILED)
+            await message.channel.send("**Error**: Invalid parameters!")
+        else:
+            if len(cvp) != 2:
+                await message.add_reaction(emoji=CHAR_FAILED)
+                await message.channel.send("**Error**: Invalid parameters!")
+            else:
+                cvid = cvp[0]; cvd = ""
+                cvif = False
+                for vid in alldatakeys("pcvotes.txt"):
+                    if vid == cvid: cvif = True; cvd = datasettings(file="pcvotes.txt",method="get",line=vid); cvif = True
+                    break
+                if not cvif:
+                    await message.add_reaction(emoji=CHAR_FAILED)
+                    await message.channel.send("**Error**: Invalid vote ID!")
+                else:
+                    cvd = cvd.split(";")
+                    cvmf = False
+                    cvg = getguild(cvd[0])
+                    if cvg is None:
+                        await message.add_reaction(emoji=CHAR_FAILED)
+                        await message.channel.send("**Error**: The Server the Vote was called in was deleted!")
+                    else:
+                        cvmm = None
+                        for m in cvg.members:
+                            if m == message.author: cvmf = True; cvmm = m
+                        if not cvmf:
+                            await message.add_reaction(emoji=CHAR_FAILED)
+                            await message.channel.send("**Error**: You are not in the Server where the Vote was called!")
+                        else:
+                            cvr = getrole(cvg,cvd[1])
+                            if cvr is None:
+                                await message.add_reaction(emoji=CHAR_FAILED)
+                                await message.channel.send("**Error**: The Role required for Voting was deleted!")
+                            else:
+                                if cvr not in cvmm.roles:
+                                    await message.add_reaction(emoji=CHAR_FAILED)
+                                    await message.channel.send("**Error**: You need the role **" + cvr.name + "** to Vote!")
+                                else:
+                                    cvav = False
+                                    for cvv in alldatakeys("pcvotes.txt"):
+                                        if cvv == "RESP" + cvid + "-" + str(message.author.id):
+                                            await message.add_reaction(emoji=CHAR_FAILED)
+                                            await message.channel.send(
+                                                "**Error**: You have already voted!")
+                                            cvav = True
+                                    if not cvav:
+                                        datasettings(file="pcvotes.txt",method="add",newkey="RESP" + cvid + "-" + str(message.author.id)
+                                                     ,newvalue=cvp[1])
+                                        await message.add_reaction(emoji=CHAR_SUCCESS)
+                                        await message.channel.send("**" + message.author.name + "**: Vote sent!")
     if message.author.id == 358598636436979713:
         if str(message.channel.id) in strtolist(datasettings(file="pcvars.txt",method="get",line="NEWDEMONSCHANNELS")):
             dmv = True; dme = {}
