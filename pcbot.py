@@ -534,7 +534,7 @@ def POINTSFORMULA(data):
             s += (((d['progress'] / 100) ** 5) * (100 / (math.exp(0.03 * (d['demon']['position'] - 1)))))
     for d in data['verified']:
         if int(d['position']) <= 100:
-            s += (((d['progress'] / 100) ** 5) * (100 / (math.exp(0.03 * (d['position'] - 1)))))
+            s += (((100 / 100) ** 5) * (100 / (math.exp(0.03 * (d['position'] - 1)))))
     return s
 
 def DEMONSLISTREFRESH():

@@ -25,7 +25,7 @@
 528904110511226901=The Hell Zone;The Hell World;The Hell Dignity;The Hell Origin
 528905216205127701=ATMarbl;Bausha Vortex;Cadrega City
 530143965488611331=Digital Descent;Photovoltaic II;Catalyze;Mystic;Audio Extraction
-478967086513782804=Celestial Force
+478967086513782804=Sigma
 535641122412691511=Yatagarasu;Erebus;Sonic Wave
 478966037749170186=Bloodlust
 478966129256300545=Spacial Rend
@@ -35,7 +35,7 @@
 473249573662621706=Sonic Wave
 473249678402781185=Yatagarasu
 478966687539134465=Devil Vortex
-478966988824117260=Zaphkiel
+478966988824117260=Zodiac
 540143523555573760=Artificial Ascent;Artificial Ideology;Artificial Dream
 540724225481244672=Killbot;Quantum Processing;Annihilation Nation
 556115358650728478=Demonicat
