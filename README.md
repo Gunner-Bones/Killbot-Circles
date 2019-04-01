@@ -39,41 +39,46 @@ Once you have the Discord bot set up correctly in Discord and with your files, r
 
 ## Deployment
 
-To keep the bot running 24/7, you'll need to host it on a server. A cheap method I use for keeping the bot online is running an [Amazon EC2](https://aws.amazon.com/ec2/) server. They offer a free 1-year tier for a basic server, which should be more than enough to run a couple of Discord bots.
+To keep the bot running 24/7, you'll need to host it on a server. A cheap method I use for keeping the bot online is running an [Amazon EC2](https://aws.amazon.com/ec2/) server. They offer a free 1-year tier for a basic server, which should be more than enough to run a couple of Discord bots. If you use the Amazon EC2, make sure to use the AWS Linux.
 You'll need to SSH into your server to transfer files. [Cyberduck](https://cyberduck.io/) is a great SSH application.
 You'll also need to see a command-line terminal so you can execute commands in your server and turn on the bot. [Putty](https://www.putty.org/) is a good tool for this (Putty is also built in to Cyberduck).
 
-Once you have transfered all the appropriate files, open Putty so you can install Python 3 and dependency libraries. You can install Python and the libraries using the `pip install` command.
+Once you have your server set up and you're SSH'd into it, first you'll need to transfer all the files for Killbot Circles: `pcbot.py`, all the TXT and SH files included in your clone of the repo, and `pass.txt`.
 
-### Linux Usage
+Within the Linux terminal, you'll need to install Python 3.7, as well as the discord rewrite API.
+To install Python:
+```
+sudo yum install python3
+```
+Once Python is installed, use this command to install the Discord rewrite.
+```
+sudo pip3.7 install -U git+https://github.com/Rapptz/discord.py@rewrite#egg=discord.py[voice]
+```
 
-Assuming Python 3 has been installed, this repository already comes with two Linux executables you can use to run the bot. `run.sh` runs the bot normally, displaying the Python console in your terminal. This is used for testing purposes to make sure the bot runs fine in the server. `nrun.sh` runs the bot in Nohup, which allows it to run continuously, even when you disconnect from the server. The Python console does not display in this mode.
-
-To run one of these scripts, type
+Now that everything is installed correctly, you can now run the bot. Running the bot in Nohup allows it to stay online 24/7, but you won't be able to see the Python logs (they output to a file called `nohup.out`, but it's hard to read). If you don't run it in Nohup, you'll be able to see the Python logs in case the bot errors, but it won't stay online 24/7.
+Run the normal script just for testing and seeing logs:
 ```
 ./run.sh
 ```
+Run the Nohup script to keep the bot online 24/7:
 ```
 ./nrun.sh
 ```
 
-Here are some other basic Linux commands if you're unfamiliar with the terminal:
-```
-cd directory
-```
-* Change your current directory to a different location. This matters for running files as you should be in the same directory as the executable when you run it. If you are already in a directory with a folder, you don't have to type out the folder's full address, but you can type `cd folder`. If you want to go up a directory, type `cd ..`
-```
-ls
-```
-* Lists all files and folders in your current directory
+To stop the bot, find its process ID and terminate it.
+Type this to find all running python processes:
 ```
 ps aux | grep python
 ```
-* Shows all running Python processes. This is used to show all bots running and can be used if you want to terminate a bot. To terminate a bot, after running this command find the Process ID of the bot, and type `kill process_id`.
+This will show a list of processes. Find the bot's process by checking the last variable in each process, which is the file name. The file name should match `python3.7 pcbot.py`. In that process, remember its process ID: It's the 4-5 digit number second from left. Then type:
 ```
-nano file.extension
+kill <process ID>
 ```
-* Opens up a simple text editor for editing files. This editor isn't as clean to use than a normal text editor, so it's not recommended using unless you really need to quickly edit something in the server without having to retransfer files. Note that if you use `nano` and specify a file that doesn't exist, it will create a file instead. For example, you could type `nano pass.txt` if you forgot to put that in and it will create the file and open the new text file in the editor.
+
+
+To verify if your bot is working correctly, in Discord try typing these commands:
+* ??kchelp - If this works, you should get private messages from the bot of a list of commands.
+* ??refresh - If this works, the bot will initially say "Manual Refresh Started". After a couple minutes, if it works, it will give results of the refresh.
 
 ## Built with
 
