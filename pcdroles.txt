@@ -39,3 +39,4 @@
 540143523555573760=Artificial Ascent;Artificial Ideology;Artificial Dream
 540724225481244672=Killbot;Quantum Processing;Annihilation Nation
 556115358650728478=Demonicat
+565646845557211140=Hatred
