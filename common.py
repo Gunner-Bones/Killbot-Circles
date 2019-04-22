@@ -265,3 +265,5 @@ def cleardata(file):
     try: s = open(file,"w")
     except: return
     s.truncate(); s.close()
+
+

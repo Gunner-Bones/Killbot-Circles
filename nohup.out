@@ -1,0 +1,208 @@
+Ignoring exception in command portfolio:
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/discord/ext/commands/bot.py", line 860, in invoke
+    await ctx.command.invoke(ctx)
+  File "/usr/local/lib/python3.7/site-packages/discord/ext/commands/core.py", line 691, in invoke
+    await self.prepare(ctx)
+  File "/usr/local/lib/python3.7/site-packages/discord/ext/commands/core.py", line 655, in prepare
+    await self._parse_arguments(ctx)
+  File "/usr/local/lib/python3.7/site-packages/discord/ext/commands/core.py", line 570, in _parse_arguments
+    transformed = await self.transform(ctx, param)
+  File "/usr/local/lib/python3.7/site-packages/discord/ext/commands/core.py", line 426, in transform
+    raise MissingRequiredArgument(param)
+discord.ext.commands.errors.MissingRequiredArgument: puser is a required argument that is missing.
+Ignoring exception in on_typing
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/discord/client.py", line 218, in _run_event
+    await coro(*args, **kwargs)
+  File "fb.py", line 915, in on_typing
+    if cdt is None: await FinishPart(c,mcc)
+  File "fb.py", line 867, in FinishPart
+    with open(fpimage,"rb") as fpi:
+FileNotFoundError: [Errno 2] No such file or directory: 'violet.jpg'
+Ignoring exception in on_typing
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/discord/client.py", line 218, in _run_event
+    await coro(*args, **kwargs)
+  File "fb.py", line 915, in on_typing
+    if cdt is None: await FinishPart(c,mcc)
+  File "fb.py", line 867, in FinishPart
+    with open(fpimage,"rb") as fpi:
+FileNotFoundError: [Errno 2] No such file or directory: 'violet.jpg'
+Ignoring exception in on_typing
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/discord/client.py", line 218, in _run_event
+    await coro(*args, **kwargs)
+  File "fb.py", line 915, in on_typing
+    if cdt is None: await FinishPart(c,mcc)
+  File "fb.py", line 867, in FinishPart
+    with open(fpimage,"rb") as fpi:
+FileNotFoundError: [Errno 2] No such file or directory: 'mindcap.jpg'
+Ignoring exception in on_typing
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/discord/client.py", line 218, in _run_event
+    await coro(*args, **kwargs)
+  File "fb.py", line 915, in on_typing
+    if cdt is None: await FinishPart(c,mcc)
+  File "fb.py", line 867, in FinishPart
+    with open(fpimage,"rb") as fpi:
+FileNotFoundError: [Errno 2] No such file or directory: 'infernalabyss.jpg'
+Ignoring exception in on_typing
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/discord/client.py", line 218, in _run_event
+    await coro(*args, **kwargs)
+  File "fb.py", line 915, in on_typing
+    if cdt is None: await FinishPart(c,mcc)
+  File "fb.py", line 867, in FinishPart
+    with open(fpimage,"rb") as fpi:
+FileNotFoundError: [Errno 2] No such file or directory: 'infernalabyss.jpg'
+Ignoring exception in on_typing
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/discord/client.py", line 218, in _run_event
+    await coro(*args, **kwargs)
+  File "fb.py", line 915, in on_typing
+    if cdt is None: await FinishPart(c,mcc)
+  File "fb.py", line 867, in FinishPart
+    with open(fpimage,"rb") as fpi:
+FileNotFoundError: [Errno 2] No such file or directory: 'finland.png'
+Ignoring exception in on_typing
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/discord/client.py", line 218, in _run_event
+    await coro(*args, **kwargs)
+  File "fb.py", line 915, in on_typing
+    if cdt is None: await FinishPart(c,mcc)
+  File "fb.py", line 867, in FinishPart
+    with open(fpimage,"rb") as fpi:
+FileNotFoundError: [Errno 2] No such file or directory: 'gru.jpg'
+Ignoring exception in on_typing
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/discord/client.py", line 218, in _run_event
+    await coro(*args, **kwargs)
+  File "fb.py", line 915, in on_typing
+    if cdt is None: await FinishPart(c,mcc)
+  File "fb.py", line 867, in FinishPart
+    with open(fpimage,"rb") as fpi:
+FileNotFoundError: [Errno 2] No such file or directory: 'zelda.jpg'
+Ignoring exception in on_typing
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/discord/client.py", line 218, in _run_event
+    await coro(*args, **kwargs)
+  File "fb.py", line 915, in on_typing
+    if cdt is None: await FinishPart(c,mcc)
+  File "fb.py", line 867, in FinishPart
+    with open(fpimage,"rb") as fpi:
+FileNotFoundError: [Errno 2] No such file or directory: 'ahegomonster.jpg'
+Ignoring exception in on_typing
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/discord/client.py", line 218, in _run_event
+    await coro(*args, **kwargs)
+  File "fb.py", line 915, in on_typing
+    if cdt is None: await FinishPart(c,mcc)
+  File "fb.py", line 867, in FinishPart
+    with open(fpimage,"rb") as fpi:
+FileNotFoundError: [Errno 2] No such file or directory: 'phub.jpg'
+Ignoring exception in on_typing
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/discord/client.py", line 218, in _run_event
+    await coro(*args, **kwargs)
+  File "fb.py", line 915, in on_typing
+    if cdt is None: await FinishPart(c,mcc)
+  File "fb.py", line 867, in FinishPart
+    with open(fpimage,"rb") as fpi:
+FileNotFoundError: [Errno 2] No such file or directory: 'ahegomonster.jpg'
+Ignoring exception in on_typing
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/discord/client.py", line 218, in _run_event
+    await coro(*args, **kwargs)
+  File "fb.py", line 915, in on_typing
+    if cdt is None: await FinishPart(c,mcc)
+  File "fb.py", line 867, in FinishPart
+    with open(fpimage,"rb") as fpi:
+FileNotFoundError: [Errno 2] No such file or directory: 'mysticmonster.jpg'
+Ignoring exception in on_typing
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/discord/client.py", line 218, in _run_event
+    await coro(*args, **kwargs)
+  File "fb.py", line 915, in on_typing
+    if cdt is None: await FinishPart(c,mcc)
+  File "fb.py", line 867, in FinishPart
+    with open(fpimage,"rb") as fpi:
+FileNotFoundError: [Errno 2] No such file or directory: 'gru.jpg'
+Bot Ready!
+Name: Finish Part Bot, ID: 558890112855834624
+Connected Guilds: kenan thanos, geostorm officiale
+Task was destroyed but it is pending!
+task: <Task pending coro=<DiscordWebSocket.close_connection() running at /usr/local/lib/python3.7/site-packages/discord/gateway.py:539> wait_for=<Future pending cb=[<TaskWakeupMethWrapper object at 0x7fb788bb5948>()]> cb=[shield.<locals>._done_callback() at /usr/lib64/python3.7/asyncio/tasks.py:776]>
+Task was destroyed but it is pending!
+task: <Task pending coro=<BotBase.close() running at /usr/local/lib/python3.7/site-packages/discord/ext/commands/bot.py:144> wait_for=<Future pending cb=[<TaskWakeupMethWrapper object at 0x7fb788bb56a8>()]> cb=[Client._do_cleanup.<locals>.when_future_is_done() at /usr/local/lib/python3.7/site-packages/discord/client.py:489]>
+Ignoring exception in command None:
+discord.ext.commands.errors.CommandNotFound: Command "kchelp" is not found
+Ignoring exception in command None:
+discord.ext.commands.errors.CommandNotFound: Command "kchelp" is not found
+Ignoring exception in command None:
+discord.ext.commands.errors.CommandNotFound: Command "refresh" is not found
+Ignoring exception in command None:
+discord.ext.commands.errors.CommandNotFound: Command "refresh" is not found
+Bot Ready!
+Name: Finish Part Bot, ID: 558890112855834624
+Connected Guilds: kenan thanos, geostorm officiale
+Task was destroyed but it is pending!
+task: <Task pending coro=<DiscordWebSocket.close_connection() running at /usr/local/lib/python3.7/site-packages/discord/gateway.py:539> wait_for=<Future pending cb=[<TaskWakeupMethWrapper object at 0x7fc050771f48>()]> cb=[shield.<locals>._done_callback() at /usr/lib64/python3.7/asyncio/tasks.py:776]>
+Task was destroyed but it is pending!
+task: <Task pending coro=<BotBase.close() running at /usr/local/lib/python3.7/site-packages/discord/ext/commands/bot.py:144> wait_for=<Future pending cb=[<TaskWakeupMethWrapper object at 0x7fc050601f48>()]> cb=[Client._do_cleanup.<locals>.when_future_is_done() at /usr/local/lib/python3.7/site-packages/discord/client.py:489]>
+Ignoring exception in command None:
+discord.ext.commands.errors.CommandNotFound: Command "portfolio" is not found
+Bot Ready!
+Name: Finish Part Bot, ID: 558890112855834624
+Connected Guilds: kenan thanos, geostorm officiale
+Task was destroyed but it is pending!
+task: <Task pending coro=<DiscordWebSocket.close_connection() running at /usr/local/lib/python3.7/site-packages/discord/gateway.py:539> wait_for=<Future pending cb=[<TaskWakeupMethWrapper object at 0x7fd665162198>()]> cb=[shield.<locals>._done_callback() at /usr/lib64/python3.7/asyncio/tasks.py:776]>
+Task was destroyed but it is pending!
+task: <Task pending coro=<BotBase.close() running at /usr/local/lib/python3.7/site-packages/discord/ext/commands/bot.py:144> wait_for=<Future pending cb=[<TaskWakeupMethWrapper object at 0x7fd665162fd8>()]> cb=[Client._do_cleanup.<locals>.when_future_is_done() at /usr/local/lib/python3.7/site-packages/discord/client.py:489]>
+Ignoring exception in command None:
+discord.ext.commands.errors.CommandNotFound: Command "kchelp" is not found
+Bot Ready!
+Name: Finish Part Bot, ID: 558890112855834624
+Connected Guilds: kenan thanos, geostorm officiale
+Task was destroyed but it is pending!
+task: <Task pending coro=<DiscordWebSocket.close_connection() running at /usr/local/lib/python3.7/site-packages/discord/gateway.py:539> wait_for=<Future pending cb=[<TaskWakeupMethWrapper object at 0x7f9a41cac228>()]> cb=[shield.<locals>._done_callback() at /usr/lib64/python3.7/asyncio/tasks.py:776]>
+Exception ignored in: <coroutine object DiscordWebSocket.close_connection at 0x7f9a41e28648>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.7/site-packages/discord/gateway.py", line 539, in close_connection
+  File "/usr/local/lib64/python3.7/site-packages/websockets/protocol.py", line 855, in close_connection
+  File "/usr/local/lib64/python3.7/site-packages/websockets/protocol.py", line 880, in wait_for_connection_lost
+  File "/usr/lib64/python3.7/asyncio/tasks.py", line 400, in wait_for
+  File "/usr/lib64/python3.7/asyncio/base_events.py", line 657, in call_later
+  File "/usr/lib64/python3.7/asyncio/base_events.py", line 667, in call_at
+  File "/usr/lib64/python3.7/asyncio/base_events.py", line 480, in _check_closed
+RuntimeError: Event loop is closed
+Task was destroyed but it is pending!
+task: <Task pending coro=<BotBase.close() running at /usr/local/lib/python3.7/site-packages/discord/ext/commands/bot.py:144> wait_for=<Future pending cb=[<TaskWakeupMethWrapper object at 0x7f9a41cac6a8>()]> cb=[Client._do_cleanup.<locals>.when_future_is_done() at /usr/local/lib/python3.7/site-packages/discord/client.py:489]>
+Bot Ready!
+Name: Finish Part Bot, ID: 558890112855834624
+Connected Guilds: kenan thanos, geostorm officiale
+Task was destroyed but it is pending!
+task: <Task pending coro=<DiscordWebSocket.close_connection() running at /usr/local/lib/python3.7/site-packages/discord/gateway.py:539> wait_for=<Future pending cb=[<TaskWakeupMethWrapper object at 0x7f8ff3fb8b28>()]> cb=[shield.<locals>._done_callback() at /usr/lib64/python3.7/asyncio/tasks.py:776]>
+Task was destroyed but it is pending!
+task: <Task pending coro=<BotBase.close() running at /usr/local/lib/python3.7/site-packages/discord/ext/commands/bot.py:144> wait_for=<Future pending cb=[<TaskWakeupMethWrapper object at 0x7f8ff3fb8cd8>()]> cb=[Client._do_cleanup.<locals>.when_future_is_done() at /usr/local/lib/python3.7/site-packages/discord/client.py:489]>
+Bot Ready!
+Name: Finish Part Bot, ID: 558890112855834624
+Connected Guilds: kenan thanos, geostorm officiale
+Task was destroyed but it is pending!
+task: <Task pending coro=<DiscordWebSocket.close_connection() running at /usr/local/lib/python3.7/site-packages/discord/gateway.py:539> wait_for=<Future pending cb=[<TaskWakeupMethWrapper object at 0x7f00e10fdb28>()]> cb=[shield.<locals>._done_callback() at /usr/lib64/python3.7/asyncio/tasks.py:776]>
+Task was destroyed but it is pending!
+task: <Task pending coro=<BotBase.close() running at /usr/local/lib/python3.7/site-packages/discord/ext/commands/bot.py:144> wait_for=<Future pending cb=[<TaskWakeupMethWrapper object at 0x7f00e0f8be58>()]> cb=[Client._do_cleanup.<locals>.when_future_is_done() at /usr/local/lib/python3.7/site-packages/discord/client.py:489]>
+Bot Ready!
+Name: Finish Part Bot, ID: 558890112855834624
+Connected Guilds: kenan thanos, geostorm officiale
+Task was destroyed but it is pending!
+task: <Task pending coro=<DiscordWebSocket.close_connection() running at /usr/local/lib/python3.7/site-packages/discord/gateway.py:539> wait_for=<Future pending cb=[<TaskWakeupMethWrapper object at 0x7f0be5155a38>()]> cb=[shield.<locals>._done_callback() at /usr/lib64/python3.7/asyncio/tasks.py:776]>
+Task was destroyed but it is pending!
+task: <Task pending coro=<BotBase.close() running at /usr/local/lib/python3.7/site-packages/discord/ext/commands/bot.py:144> wait_for=<Future pending cb=[<TaskWakeupMethWrapper object at 0x7f0be4fe05b8>()]> cb=[Client._do_cleanup.<locals>.when_future_is_done() at /usr/local/lib/python3.7/site-packages/discord/client.py:489]>
+Bot Ready!
+Name: Finish Part Bot, ID: 558890112855834624
+Connected Guilds: kenan thanos, geostorm officiale
+Task was destroyed but it is pending!
+task: <Task pending coro=<DiscordWebSocket.close_connection() running at /usr/local/lib/python3.7/site-packages/discord/gateway.py:539> wait_for=<Future pending cb=[<TaskWakeupMethWrapper object at 0x7f0430c36bb8>()]> cb=[shield.<locals>._done_callback() at /usr/lib64/python3.7/asyncio/tasks.py:776]>
+Task was destroyed but it is pending!
+task: <Task pending coro=<BotBase.close() running at /usr/local/lib/python3.7/site-packages/discord/ext/commands/bot.py:144> wait_for=<Future pending cb=[<TaskWakeupMethWrapper object at 0x7f0430c36a38>()]> cb=[Client._do_cleanup.<locals>.when_future_is_done() at /usr/local/lib/python3.7/site-packages/discord/client.py:489]>
