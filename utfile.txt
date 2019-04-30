@@ -2,6 +2,4 @@ TESTADD=testvalue
 TESTGET=testdata
 TESTCHANGE=notdata
 TESTADD=testvalue
-TESTADD=testvalue
-TESTADD=testvalue
 TESTREMOVE=test

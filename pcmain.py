@@ -1,6 +1,7 @@
 import discord, asyncio, sys, os, urllib.request, json, math, random, ast, datetime, base64, time
 from discord.ext import commands
 from common import *
+from constants import *
 
 Client = discord.Client()
 bot_prefix= "??"
@@ -14,10 +15,6 @@ for l in s: sl.append(l.replace("\n",""))
 SECRET = sl[0]
 
 # https://discordapp.com/oauth2/authorize?client_id=501942021615779850&scope=bot
-
-CHAR_SUCCESS = "✅"
-CHAR_FAILED = "❌"
-CHAR_SENT = "📨"
 
 DEMONSLIST = []
 
@@ -61,12 +58,12 @@ async def ResponseMessage(ctx,response,messagereaction,preset=""):
               "invalidparams":"Invalid parameters!"}
         response = pi[preset]
     await ctx.message.channel.send("**" + ctx.author.name + "**, " + response)
-    mri = {"success":CHAR_SUCCESS,"failed":CHAR_FAILED}
+    mri = {RM_RESPONSE_SUCCESS:CHAR_SUCCESS,RM_RESPONSE_FAILED:CHAR_FAILED}
     await ctx.message.add_reaction(mri[messagereaction])
 
 @client.event
 async def on_ready():
-    print("Bot Ready!!!!")
+    print("Bot Ready!")
     print("Name: " + client.user.name + ", ID: " + str(client.user.id))
     sl = ""
     DEMONSLISTREFRESH()
@@ -79,21 +76,89 @@ async def on_ready():
 async def setmoderator(ctx,moderator):
     if AuthorHasPermissions(ctx):
         if BotHasPermissions(ctx):
-            smmoderator = getrole(ctx.guild,moderator)
+            sm_moderator = getrole(ctx.guild,moderator)
             if smmoderator is not None:
-                if datasettings(file="pcmods.txt", method="get", line="MODERATOR" + str(ctx.guild.id)) is None:
-                    datasettings(file="pcmods.txt", method="add", newkey="MODERATOR" + str(ctx.guild.id), newvalue=str(smmoderator.id))
-                    await ResponseMessage(ctx,smmoderator.name + " set as MODERATOR role.","success")
+                if datasettings(file=FILE_PCMODS, method=DS_METHOD_GET, line=KEY_MODERATOR + str(ctx.guild.id)) is None:
+                    datasettings(file=FILE_PCMODS, method=DS_METHOD_ADD, newkey=KEY_MODERATOR + str(ctx.guild.id),
+                                 newvalue=str(sm_moderator.id))
+                    await ResponseMessage(ctx,sm_moderator.name + RM_MESSAGE_SETMODERATOR_SET,RM_RESPONSE_SUCCESS)
                 else:
-                    datasettings(file="pcmods.txt", method="change", line="MODERATOR" + str(ctx.guild.id), newvalue=str(smmoderator.id))
-                    await ResponseMessage(ctx, smmoderator.name + " set as MODERATOR role.", "success")
+                    datasettings(file=FILE_PCMODS, method=DS_METHOD_CHANGE, line=KEY_MODERATOR + str(ctx.guild.id),
+                                 newvalue=str(sm_moderator.id))
+                    await ResponseMessage(ctx, sm_moderator.name + RM_MESSAGE_SETMODERATOR_SET,RM_RESPONSE_SUCCESS)
             else:
-                await ResponseMessage(ctx,"","failed","invalidparams")
+                await ResponseMessage(ctx,RM_BLANK,RM_RESPONSE_FAILED,RM_PRESET_INVALIDPARAMS)
         else:
-            await ResponseMessage(ctx,"","failed","botlacksperms")
+            await ResponseMessage(ctx,RM_BLANK,RM_RESPONSE_FAILED,RM_PRESET_BOTLACKSPERMS)
     else:
-        await ResponseMessage(ctx,"","failed","authorlacksperms")
+        await ResponseMessage(ctx,RM_BLANK,RM_RESPONSE_FAILED,RM_PRESET_AUTHORLACKSPERMS)
 
+@client.command(pass_context=True)
+async def addpointsrole(ctx,role_name,points_req):
+    if AuthorHasPermissions(ctx):
+        if BotHasPermissions(ctx):
+            apr_role = getrole(ctx.guild,role_name)
+            if apr_role is not None:
+                if isnumber(points_req):
+                    if datasettings(file=FILE_PCPROLES,method=DS_METHOD_GET,line=str(apr_role.id)) is None:
+                        datasettings(file=FILE_PCPROLES,method=DS_METHOD_ADD,newkey=str(apr_role.id),
+                                     newvalue=str(points_req))
+                        await ResponseMessage(ctx,RM_MESSAGE_GENERAL_STARTING_SET + apr_role.name +
+                                              RM_MESSAGE_ADDPOINTSROLE_SET + str(points_req),RM_RESPONSE_SUCCESS)
+                    else:
+                        await ResponseMessage(ctx,RM_MESSAGE_POINTSROLE_FAILEDEXISTS + apr_role.name +
+                                              RM_MESSAGE_GENERAL_ENDING_IE,RM_RESPONSE_FAILED)
+                else:
+                    await ResponseMessage(ctx,RM_MESSAGE_GENERAL_INVALIDPOINTSNUMBER,RM_RESPONSE_FAILED)
+            else:
+                await ResponseMessage(ctx,RM_MESSAGE_GENERAL_INVALIDROLE,RM_RESPONSE_FAILED)
+        else:
+            await ResponseMessage(ctx,RM_BLANK,RM_RESPONSE_FAILED,RM_PRESET_BOTLACKSPERMS)
+    else:
+        await ResponseMessage(ctx,RM_BLANK,RM_RESPONSE_FAILED,RM_PRESET_AUTHORLACKSPERMS)
 
+@client.command(pass_context=True)
+async def removepointsrole(ctx,role_name):
+    if AuthorHasPermissions(ctx):
+        if BotHasPermissions(ctx):
+            rpr_role = getrole(ctx.guild,role_name)
+            if rpr_role is not None:
+                if datasettings(file=FILE_PCPROLES,method=DS_METHOD_GET,line=str(rpr_role.id)) is not None:
+                    datasettings(file=FILE_PCPROLES,method=DS_METHOD_CHANGE,line=str(rpr_role.id))
+                    await ResponseMessage(ctx, RM_MESSAGE_GENERAL_STARTING_REMOVE + rpr_role.name +
+                                          RM_MESSAGE_REMOVEPOINTSROLE_REMOVE,RM_RESPONSE_SUCCESS)
+                else:
+                    await ResponseMessage(ctx, RM_MESSAGE_POINTSROLE_FAILEDDOESNTEXIST + apr_role.name +
+                                          RM_MESSAGE_GENERAL_ENDING_IE, RM_RESPONSE_FAILED)
+            else:
+                await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDROLE, RM_RESPONSE_FAILED)
+        else:
+            await ResponseMessage(ctx, RM_BLANK, RM_RESPONSE_FAILED, RM_PRESET_BOTLACKSPERMS)
+    else:
+        await ResponseMessage(ctx, RM_BLANK, RM_RESPONSE_FAILED, RM_PRESET_AUTHORLACKSPERMS)
+
+@client.command(pass_context=True)
+async def editpointsrole(ctx,role_name,points_req):
+    if AuthorHasPermissions(ctx):
+        if BotHasPermissions(ctx):
+            epr_role = getrole(ctx.guild,role_name)
+            if epr_role is not None:
+                if isnumber(points_req):
+                    if datasettings(file=FILE_PCPROLES,method=DS_METHOD_GET,line=str(epr_role.id)) is not None:
+                        datasettings(file=FILE_PCPROLES,method=DS_METHOD_CHANGE,line=str(epr_role.id),
+                                     newvalue=str(points_req))
+                        await ResponseMessage(ctx,RM_MESSAGE_GENERAL_STARTING_SET + epr_role.name +
+                                              RM_MESSAGE_EDITPOINTSROLE_SET + str(points_req),RM_RESPONSE_SUCCESS)
+                    else:
+                        await ResponseMessage(ctx,RM_MESSAGE_POINTSROLE_FAILEDEXISTS + epr_role.name +
+                                              RM_MESSAGE_GENERAL_ENDING_IE,RM_RESPONSE_FAILED)
+                else:
+                    await ResponseMessage(ctx,RM_MESSAGE_GENERAL_INVALIDPOINTSNUMBER,RM_RESPONSE_FAILED)
+            else:
+                await ResponseMessage(ctx,RM_MESSAGE_GENERAL_INVALIDROLE,RM_RESPONSE_FAILED)
+        else:
+            await ResponseMessage(ctx,RM_BLANK,RM_RESPONSE_FAILED,RM_PRESET_BOTLACKSPERMS)
+    else:
+        await ResponseMessage(ctx,RM_BLANK,RM_RESPONSE_FAILED,RM_PRESET_AUTHORLACKSPERMS)
 
 client.run(SECRET)

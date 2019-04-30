@@ -13,11 +13,11 @@ sl = []
 for l in s: sl.append(l.replace("\n",""))
 SECRET = sl[0]
 
-# https://discordapp.com/oauth2/authorize?client_id=501942021615779850&scope=bot
-
 CHAR_SUCCESS = "✅"
 CHAR_FAILED = "❌"
 CHAR_SENT = "📨"
+
+# https://discordapp.com/oauth2/authorize?client_id=501942021615779850&scope=bot
 
 
 def getanylevel(levelname):

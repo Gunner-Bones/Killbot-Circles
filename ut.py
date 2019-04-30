@@ -20,8 +20,6 @@ def DEMONSLISTREFRESH():
     for d2 in rj2: DEMONSLIST.append(d2)
     print("[Demons List] Top 100 Demons refreshed")
 
-GLOBALDISCORDMESSAGE = None
-
 
 class TestRefreshList(unittest.TestCase):
 
@@ -32,7 +30,8 @@ class TestRefreshList(unittest.TestCase):
 class TestDatasettings(unittest.TestCase):
 
     def test_addvalue(self):
-        self.assertIsNone(datasettings(file="utfile.txt",method="add",newkey="TESTADD",newvalue="testvalue"))
+        av = str(random.randint(0,1000))
+        self.assertIsNone(datasettings(file="utfile.txt",method="add",newkey="TESTADD",newvalue=av))
     def test_returnrealvalue(self):
         dv = datasettings(file="utfile.txt",method="get",line="TESTGET")
         self.assertEqual(dv,"testdata")
