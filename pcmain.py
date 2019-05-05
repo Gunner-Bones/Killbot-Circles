@@ -124,7 +124,7 @@ async def removepointsrole(ctx,role_name):
             rpr_role = getrole(ctx.guild,role_name)
             if rpr_role is not None:
                 if datasettings(file=FILE_PCPROLES,method=DS_METHOD_GET,line=str(rpr_role.id)) is not None:
-                    datasettings(file=FILE_PCPROLES,method=DS_METHOD_CHANGE,line=str(rpr_role.id))
+                    datasettings(file=FILE_PCPROLES,method=DS_METHOD_CHANGE,line=str(rpr_role.id),newvalue=VALUE_REMOVED)
                     await ResponseMessage(ctx, RM_MESSAGE_GENERAL_STARTING_REMOVE + rpr_role.name +
                                           RM_MESSAGE_REMOVEPOINTSROLE_REMOVE,RM_RESPONSE_SUCCESS)
                 else:
@@ -154,6 +154,103 @@ async def editpointsrole(ctx,role_name,points_req):
                                               RM_MESSAGE_GENERAL_ENDING_IE,RM_RESPONSE_FAILED)
                 else:
                     await ResponseMessage(ctx,RM_MESSAGE_GENERAL_INVALIDPOINTSNUMBER,RM_RESPONSE_FAILED)
+            else:
+                await ResponseMessage(ctx,RM_MESSAGE_GENERAL_INVALIDROLE,RM_RESPONSE_FAILED)
+        else:
+            await ResponseMessage(ctx,RM_BLANK,RM_RESPONSE_FAILED,RM_PRESET_BOTLACKSPERMS)
+    else:
+        await ResponseMessage(ctx,RM_BLANK,RM_RESPONSE_FAILED,RM_PRESET_AUTHORLACKSPERMS)
+
+@client.command(pass_context=True)
+async def adddemonsrole(ctx,role_name,demons):
+    global DEMONSLIST
+    if AuthorHasPermissions(ctx):
+        if BotHasPermissions(ctx):
+            adr_role = getrole(ctx.guild,role_name)
+            if adr_role is not None:
+                adr_demons = []
+                adr_valid = False
+                if "," not in demons:
+                    adr_demons = [demons]
+                    adr_valid = True
+                else:
+                    demons_split = demons.split(",")
+                    for demon in demons_split:
+                        for list_demon in DEMONSLIST:
+                            if list_demon['name'].lower() == demon.lower(): adr_demons.append(demon)
+                    if adr_demons == demons_split: adr_valid = True
+                if adr_valid:
+                    adr_demons_str = ""
+                    for demon in adr_demons: adr_demons_str += demon + ";"
+                    adr_demons_str = adr_demons_str[:len(adr_demons_str) - 1]
+                    if datasettings(file=FILE_PCDROLES, method=DS_METHOD_GET, line=str(adr_role.id)) is None:
+                        datasettings(file=FILE_PCDROLES, method=DS_METHOD_ADD, newkey=str(adr_role.id), newline=adr_demons_str)
+                        await ResponseMessage(ctx, RM_MESSAGE_GENERAL_STARTING_SET + adr_role.name +
+                                              RM_MESSAGE_DEMONSROLE_SET + adr_demons_str,RM_RESPONSE_SUCCESS)
+                    else:
+                        await ResponseMessage(ctx, RM_MESSAGE_DEMONSROLE_FAILEDEXISTS + adr_role.name +
+                                              RM_MESSAGE_GENERAL_ENDING_IE, RM_RESPONSE_FAILED)
+                else:
+                    await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDDEMONS, RM_RESPONSE_FAILED)
+            else:
+                await ResponseMessage(ctx,RM_MESSAGE_GENERAL_INVALIDROLE,RM_RESPONSE_FAILED)
+        else:
+            await ResponseMessage(ctx,RM_BLANK,RM_RESPONSE_FAILED,RM_PRESET_BOTLACKSPERMS)
+    else:
+        await ResponseMessage(ctx,RM_BLANK,RM_RESPONSE_FAILED,RM_PRESET_AUTHORLACKSPERMS)
+
+@client.command(pass_context=True)
+async def removedemonsrole(ctx,role_name):
+    global DEMONSLIST
+    if AuthorHasPermissions(ctx):
+        if BotHasPermissions(ctx):
+            rdr_role = getrole(ctx.guild,role_name)
+            if rdr_role is not None:
+                if datasettings(file=FILE_PCDROLES, method=DS_METHOD_GET, line=str(rdr_role.id)) is not None:
+                    datasettings(file=FILE_PCDROLES, method=DS_METHOD_CHANGE, line=str(rdr_role.id), newvalue=VALUE_REMOVED)
+                    await ResponseMessage(ctx, RM_MESSAGE_GENERAL_STARTING_REMOVE + rdr_role.name +
+                                          RM_MESSAGE_REMOVEDEMONSROLE_REMOVE ,RM_RESPONSE_SUCCESS)
+                else:
+                    await ResponseMessage(ctx, RM_MESSAGE_DEMONSROLE_FAILEDDOESNTEXIST + rdr_role.name +
+                                          RM_MESSAGE_GENERAL_ENDING_IE, RM_RESPONSE_FAILED)
+            else:
+                await ResponseMessage(ctx,RM_MESSAGE_GENERAL_INVALIDROLE,RM_RESPONSE_FAILED)
+        else:
+            await ResponseMessage(ctx,RM_BLANK,RM_RESPONSE_FAILED,RM_PRESET_BOTLACKSPERMS)
+    else:
+        await ResponseMessage(ctx,RM_BLANK,RM_RESPONSE_FAILED,RM_PRESET_AUTHORLACKSPERMS)
+
+@client.command(pass_context=True)
+async def editdemonsrole(ctx,role_name,demons):
+    global DEMONSLIST
+    if AuthorHasPermissions(ctx):
+        if BotHasPermissions(ctx):
+            edr_role = getrole(ctx.guild,role_name)
+            if edr_role is not None:
+                adr_demons = []
+                adr_valid = False
+                if "," not in demons:
+                    adr_demons = [demons]
+                    adr_valid = True
+                else:
+                    demons_split = demons.split(",")
+                    for demon in demons_split:
+                        for list_demon in DEMONSLIST:
+                            if list_demon['name'].lower() == demon.lower(): adr_demons.append(demon)
+                    if adr_demons == demons_split: adr_valid = True
+                if adr_valid:
+                    adr_demons_str = ""
+                    for demon in adr_demons: adr_demons_str += demon + ";"
+                    adr_demons_str = adr_demons_str[:len(adr_demons_str) - 1]
+                    if datasettings(file=FILE_PCDROLES, method=DS_METHOD_GET, line=str(edr_role.id)) is not None:
+                        datasettings(file=FILE_PCDROLES, method=DS_METHOD_CHANGE, newkey=str(edr_role.id), newline=adr_demons_str)
+                        await ResponseMessage(ctx, RM_MESSAGE_GENERAL_STARTING_SET + edr_role.name +
+                                              RM_MESSAGE_DEMONSROLE_SET + adr_demons_str,RM_RESPONSE_SUCCESS)
+                    else:
+                        await ResponseMessage(ctx, RM_MESSAGE_DEMONSROLE_FAILEDDOESNTEXIST + edr_role.name +
+                                              RM_MESSAGE_GENERAL_ENDING_IE, RM_RESPONSE_FAILED)
+                else:
+                    await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDDEMONS, RM_RESPONSE_FAILED)
             else:
                 await ResponseMessage(ctx,RM_MESSAGE_GENERAL_INVALIDROLE,RM_RESPONSE_FAILED)
         else:
