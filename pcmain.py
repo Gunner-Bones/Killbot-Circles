@@ -36,6 +36,27 @@ def DEMONSLISTREFRESH():
     for d2 in rj2: DEMONSLIST.append(d2)
     print("[Demons List] Top 100 Demons refreshed")
 
+def membermoderator(member):
+    m = datasettings(FILE_PCMODS,DS_METHOD_GET,KEY_MODERATOR + str(member.guild.id))
+    if m is None: return memberadmin(member)
+    m = getrole(member.guild,m)
+    if m in member.roles: return True
+    else: return memberadmin(member)
+
+def linkedplayer(uid):
+    uid = str(uid)
+    if alldatakeys(FILE_PCDATA):
+        for lp in alldatakeys(FILE_PCDATA):
+            if lp == uid: return datasettings(file=FILE_PCDATA,method=DS_METHOD_GET,line=lp)
+    return None
+
+async def reportfeedback(guild_name,user_name,demon,feedback):
+    feedback_channel = getchannel(getguild(SPECIFIC_GUILD_POINTERCRATE),
+                                  datasettings(file=FILE_PCVARS,method=DS_METHOD_GET,line=KEY_FEEDBACKCHANNEL))
+    if feedback_channel is not None:
+        await feedback_channel.send(NM_MESSAGE_FEEDBACK + guild_name + NM_LINE_USER + user_name + NM_LINE_DEMON +
+                                    demon + NM_LINE_FEEDBACK + feedback)
+
 def BotHasPermissions(ctx):
     if not ctx.message.guild: return True
     for member in ctx.guild.members:
@@ -95,7 +116,7 @@ async def setmoderator(ctx,moderator):
 
 @client.command(pass_context=True)
 async def addpointsrole(ctx,role_name,points_req):
-    if AuthorHasPermissions(ctx):
+    if membermoderator(ctx.author):
         if BotHasPermissions(ctx):
             apr_role = getrole(ctx.guild,role_name)
             if apr_role is not None:
@@ -119,7 +140,7 @@ async def addpointsrole(ctx,role_name,points_req):
 
 @client.command(pass_context=True)
 async def removepointsrole(ctx,role_name):
-    if AuthorHasPermissions(ctx):
+    if membermoderator(ctx.author):
         if BotHasPermissions(ctx):
             rpr_role = getrole(ctx.guild,role_name)
             if rpr_role is not None:
@@ -128,7 +149,7 @@ async def removepointsrole(ctx,role_name):
                     await ResponseMessage(ctx, RM_MESSAGE_GENERAL_STARTING_REMOVE + rpr_role.name +
                                           RM_MESSAGE_REMOVEPOINTSROLE_REMOVE,RM_RESPONSE_SUCCESS)
                 else:
-                    await ResponseMessage(ctx, RM_MESSAGE_POINTSROLE_FAILEDDOESNTEXIST + apr_role.name +
+                    await ResponseMessage(ctx, RM_MESSAGE_POINTSROLE_FAILEDDOESNTEXIST + rpr_role.name +
                                           RM_MESSAGE_GENERAL_ENDING_IE, RM_RESPONSE_FAILED)
             else:
                 await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDROLE, RM_RESPONSE_FAILED)
@@ -139,7 +160,7 @@ async def removepointsrole(ctx,role_name):
 
 @client.command(pass_context=True)
 async def editpointsrole(ctx,role_name,points_req):
-    if AuthorHasPermissions(ctx):
+    if membermoderator(ctx.author):
         if BotHasPermissions(ctx):
             epr_role = getrole(ctx.guild,role_name)
             if epr_role is not None:
@@ -164,7 +185,7 @@ async def editpointsrole(ctx,role_name,points_req):
 @client.command(pass_context=True)
 async def adddemonsrole(ctx,role_name,demons):
     global DEMONSLIST
-    if AuthorHasPermissions(ctx):
+    if membermoderator(ctx.author):
         if BotHasPermissions(ctx):
             adr_role = getrole(ctx.guild,role_name)
             if adr_role is not None:
@@ -202,7 +223,7 @@ async def adddemonsrole(ctx,role_name,demons):
 @client.command(pass_context=True)
 async def removedemonsrole(ctx,role_name):
     global DEMONSLIST
-    if AuthorHasPermissions(ctx):
+    if membermoderator(ctx.author):
         if BotHasPermissions(ctx):
             rdr_role = getrole(ctx.guild,role_name)
             if rdr_role is not None:
@@ -223,7 +244,7 @@ async def removedemonsrole(ctx,role_name):
 @client.command(pass_context=True)
 async def editdemonsrole(ctx,role_name,demons):
     global DEMONSLIST
-    if AuthorHasPermissions(ctx):
+    if membermoderator(ctx.author):
         if BotHasPermissions(ctx):
             edr_role = getrole(ctx.guild,role_name)
             if edr_role is not None:
@@ -257,5 +278,201 @@ async def editdemonsrole(ctx,role_name,demons):
             await ResponseMessage(ctx,RM_BLANK,RM_RESPONSE_FAILED,RM_PRESET_BOTLACKSPERMS)
     else:
         await ResponseMessage(ctx,RM_BLANK,RM_RESPONSE_FAILED,RM_PRESET_AUTHORLACKSPERMS)
+
+
+@client.command(pass_context=True)
+async def playerlink(ctx,user_name,player_id):
+    if inallowedguild(ctx.guild,ctx.author):
+        if membermoderator(ctx.author):
+            if BotHasPermissions(ctx):
+                link_user = getmember(ctx.guild,user_name)
+                if link_user is not None:
+                    if isnumber(player_id):
+                        link_user_data = PLAYERDATA(player_id)
+                        if link_user_data is not None:
+                            player_has_points = True
+                            try: link_user_data['records']
+                            except KeyError: player_has_points = False
+                            if player_has_points:
+                                if datasettings(file=FILE_PCDATA,method=DS_METHOD_GET,line=str(link_user.id)) is None:
+                                    datasettings(file=FILE_PCDATA,method=DS_METHOD_ADD,newkey=str(link_user.id),newvalue=str(player_id))
+                                    await ResponseMessage(ctx, RM_MESSAGE_PLAYERLINK_SET + link_user.name +
+                                                          RM_MESSAGE_GENERAL_MIDDLE_TO + str(player_id) +
+                                                          RM_MESSAGE_GENERAL_MIDDLE_PARENTHESESOPEN + link_user_data['name'] +
+                                                          RM_MESSAGE_GENERAL_MIDDLE_PARENTHESESCLOSE, RM_RESPONSE_SUCCESS)
+                                else:
+                                    await ResponseMessage(ctx, RM_MESSAGE_PLAYERLINK_FAILEDEXISTS, RM_RESPONSE_FAILED)
+                            else:
+                                await ResponseMessage(ctx, RM_MESSAGE_GENERAL_PLAYERNOPOINTS, RM_RESPONSE_FAILED)
+                        else:
+                            await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDPID, RM_RESPONSE_FAILED)
+                    else:
+                        await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDPID, RM_RESPONSE_FAILED)
+                else:
+                    await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDUSER, RM_RESPONSE_FAILED)
+            else:
+                await ResponseMessage(ctx,RM_BLANK,RM_RESPONSE_FAILED,RM_PRESET_BOTLACKSPERMS)
+        else:
+            await ResponseMessage(ctx,RM_BLANK,RM_RESPONSE_FAILED,RM_PRESET_AUTHORLACKSPERMS)
+
+@client.command(pass_context=True)
+async def playerunlink(ctx,user_name):
+    if inallowedguild(ctx.guild, ctx.author):
+        if membermoderator(ctx.author):
+            if BotHasPermissions(ctx):
+                link_user = getmember(ctx.guild,user_name)
+                if link_user is not None:
+                    if datasettings(file=FILE_PCDATA, method=DS_METHOD_GET, line=str(link_user.id)) is not None:
+                        link_id = datasettings(file=FILE_PCDATA, method=DS_METHOD_GET, line=str(link_user.id))
+                        link_data = PLAYERDATA(link_id)
+                        link_name = "No Name"
+                        try: link_name = link_data['name']
+                        except: pass
+                        datasettings(file=FILE_PCDATA,method=DS_METHOD_CHANGE, line=str(link_user.id), newvalue=VALUE_REMOVED)
+                        await ResponseMessage(ctx, RM_MESSAGE_PLAYERUNLINK_SET + link_user.name +
+                                              RM_MESSAGE_GENERAL_MIDDLE_FROM + link_id +
+                                              RM_MESSAGE_GENERAL_MIDDLE_PARENTHESESOPEN + link_name +
+                                              RM_MESSAGE_GENERAL_MIDDLE_PARENTHESESCLOSE, RM_RESPONSE_SUCCESS)
+                    else:
+                        await ResponseMessage(ctx, RM_MESSAGE_PLAYERLINK_FAILEDDOESNTEXIST, RM_RESPONSE_FAILED)
+                else:
+                    await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDUSER, RM_RESPONSE_FAILED)
+            else:
+                await ResponseMessage(ctx,RM_BLANK,RM_RESPONSE_FAILED,RM_PRESET_BOTLACKSPERMS)
+        else:
+            await ResponseMessage(ctx,RM_BLANK,RM_RESPONSE_FAILED,RM_PRESET_AUTHORLACKSPERMS)
+
+@client.command(pass_context=True)
+async def addpositionalrole(ctx,role_name,base,range):
+    if membermoderator(ctx.author):
+        if BotHasPermissions(ctx):
+            pos_role = getrole(ctx.guild,role_name)
+            if pos_role is not None:
+                if isnumber(base) and isnumber(range):
+                    pos_base = int(base)
+                    pos_range = int(range)
+                    if 1 <= pos_base <= 100:
+                        if 1 <= pos_range <= pos_base:
+                            if datasettings(file=FILE_PCPOSROLES,method=DS_METHOD_GET,line=str(pos_role.id)) is None:
+                                datasettings(file=FILE_PCPOSROLES,method=DS_METHOD_ADD,newkey=str(pos_role.id),
+                                             newvalue=str(pos_base) + VALUE_DASH + str(pos_range))
+                                await ResponseMessage(ctx, pos_role.name + RM_MESSAGE_ADDPOSITIONALROLE_SET1 +
+                                                      str(pos_base) + RM_MESSAGE_ADDPOSITIONALROLE_SET2 +
+                                                      str(pos_range), RM_RESPONSE_SUCCESS)
+                            else:
+                                await ResponseMessage(ctx, RM_MESSAGE_POSITIONALROLE_FAILEDEXISTS + pos_role.name +
+                                                      RM_MESSAGE_GENERAL_ENDING_IE, RM_RESPONSE_FAILED)
+                        else:
+                            await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDRANGEBASE, RM_RESPONSE_FAILED)
+                    else:
+                        await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDRANGEBASE, RM_RESPONSE_FAILED)
+                else:
+                    await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDRANGEBASE, RM_RESPONSE_FAILED)
+            else:
+                await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDROLE, RM_RESPONSE_FAILED)
+        else:
+            await ResponseMessage(ctx,RM_BLANK,RM_RESPONSE_FAILED,RM_PRESET_BOTLACKSPERMS)
+    else:
+        await ResponseMessage(ctx,RM_BLANK,RM_RESPONSE_FAILED,RM_PRESET_AUTHORLACKSPERMS)
+
+@client.command(pass_context=True)
+async def removepositionalrole(ctx,role_name):
+    if membermoderator(ctx.author):
+        if BotHasPermissions(ctx):
+            pos_role = getrole(ctx.guild, role_name)
+            if pos_role is not None:
+                if datasettings(file=FILE_PCPOSROLES,method=DS_METHOD_GET,line=str(pos_role.id)) is not None:
+                    datasettings(file=FILE_PCPOSROLES,method=DS_METHOD_CHANGE,line=str(pos_role.id),newvalue=VALUE_REMOVED)
+                    await ResponseMessage(ctx, RM_MESSAGE_GENERAL_STARTING_REMOVE + pos_role.name +
+                                          RM_MESSAGE_REMOVEPOSITIONALROLE_REMOVE, RM_RESPONSE_SUCCESS)
+                else:
+                    await ResponseMessage(ctx, RM_MESSAGE_POSITIONALROLE_FAILEDDOESNTEXIST + pos_role.name +
+                                          RM_MESSAGE_GENERAL_ENDING_IE, RM_RESPONSE_FAILED)
+            else:
+                await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDROLE, RM_RESPONSE_FAILED)
+        else:
+            await ResponseMessage(ctx,RM_BLANK,RM_RESPONSE_FAILED,RM_PRESET_BOTLACKSPERMS)
+    else:
+        await ResponseMessage(ctx,RM_BLANK,RM_RESPONSE_FAILED,RM_PRESET_AUTHORLACKSPERMS)
+
+@client.command(pass_context=True)
+async def editpositionalrole(ctx,role_name,base,range):
+    if membermoderator(ctx.author):
+        if BotHasPermissions(ctx):
+            pos_role = getrole(ctx.guild,role_name)
+            if pos_role is not None:
+                if isnumber(base) and isnumber(range):
+                    pos_base = int(base)
+                    pos_range = int(range)
+                    if 1 <= pos_base <= 100:
+                        if 1 <= pos_range <= pos_base:
+                            if datasettings(file=FILE_PCPOSROLES,method=DS_METHOD_GET,line=str(pos_role.id)) is not None:
+                                datasettings(file=FILE_PCPOSROLES,method=DS_METHOD_CHANGE,line=str(pos_role.id),
+                                             newvalue=str(pos_base) + VALUE_DASH + str(pos_range))
+                                await ResponseMessage(ctx, RM_MESSAGE_GENERAL_STARTING_SET + pos_role.name +
+                                                      RM_MESSAGE_EDITPOSITIONALROLE_SET +
+                                                      str(pos_base) + RM_MESSAGE_ADDPOSITIONALROLE_SET2 +
+                                                      str(pos_range), RM_RESPONSE_SUCCESS)
+                            else:
+                                await ResponseMessage(ctx, RM_MESSAGE_POSITIONALROLE_FAILEDDOESNTEXIST + pos_role.name +
+                                                      RM_MESSAGE_GENERAL_ENDING_IE, RM_RESPONSE_FAILED)
+                        else:
+                            await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDRANGEBASE, RM_RESPONSE_FAILED)
+                    else:
+                        await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDRANGEBASE, RM_RESPONSE_FAILED)
+                else:
+                    await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDRANGEBASE, RM_RESPONSE_FAILED)
+            else:
+                await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDROLE, RM_RESPONSE_FAILED)
+        else:
+            await ResponseMessage(ctx,RM_BLANK,RM_RESPONSE_FAILED,RM_PRESET_BOTLACKSPERMS)
+    else:
+        await ResponseMessage(ctx,RM_BLANK,RM_RESPONSE_FAILED,RM_PRESET_AUTHORLACKSPERMS)
+
+client.command(pass_context=True)
+async def feedback(ctx,demon_position,feedback_message):
+    global DEMONSLIST
+    if isnumber(demon_position):
+        if 1 <= demon_position <= len(DEMONSLIST):
+            if linkedplayer(str(ctx.author.id)) is not None:
+                link_data = PLAYERDATA(linkedplayer(str(ctx.author.id)))
+                if link_data is not None:
+                    feedback_demon_beaten = False
+                    feedback_demon = ""
+                    for demon in DEMONSLIST:
+                        if demon['position'] == demon_position: feedback_demon = demon['name']
+                    for beaten_demon in link_data['records']:
+                        if feedback_demon.lower() == beaten_demon['demon']['name'].lower(): feedback_demon_beaten = True
+                    if feedback_demon_beaten:
+                        if len(feedback_message) >= 1:
+                            wrote_feedback = False
+                            for feedback in alldatakeys(FILE_PCFEED):
+                                feedback_data = datasettings(file=FILE_PCFEED,method=DS_METHOD_GET,line=feedback).split(";")
+                                if feedback_data[0] == linkedplayer(str(ctx.author.id)) and feedback_data[1].lower() == feedback_demon.lower():
+                                    wrote_feedback = True
+                            if not wrote_feedback:
+                                await reportfeedback(ctx.guild.name,ctx.author.name,feedback_demon,feedback_message)
+                                datasettings(file=FILE_PCFEED,method=DS_METHOD_ADD,
+                                             newkey=KEY_FEEDBACK + str(random.randint(10000,99999)),
+                                             newline=linkedplayer(str(ctx.author.id)) + VALUE_SEMICOLON + feedback_demon)
+                                await ResponseMessage(ctx, RM_MESSAGE_FEEDBACK_SENT + feedback_demon +
+                                                      RM_MESSAGE_GENERAL_ENDING_SENT, RM_RESPONSE_SUCCESS)
+                            else:
+                                await ResponseMessage(ctx, RM_MESSAGE_FEEDBACK_ALREADYWRITTEN + feedback_demon +
+                                                      RM_MESSAGE_GENERAL_ENDING_IE, RM_RESPONSE_FAILED)
+                        else:
+                            await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDMESSAGE, RM_RESPONSE_FAILED)
+                    else:
+                        await ResponseMessage(ctx, RM_MESSAGE_FEEDBACK_NOTBEATEN + feedback_demon +
+                                              RM_MESSAGE_GENERAL_ENDING_IE, RM_RESPONSE_FAILED)
+                else:
+                    await ResponseMessage(ctx, RM_MESSAGE_GENERAL_PLAYERNOPOINTS, RM_RESPONSE_FAILED)
+            else:
+                await ResponseMessage(ctx, RM_MESSAGE_GENERAL_NOTLINKED, RM_RESPONSE_FAILED)
+        else:
+            await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDDEMONPOSITION, RM_RESPONSE_FAILED)
+    else:
+        await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDDEMONPOSITION, RM_RESPONSE_FAILED)
+
 
 client.run(SECRET)

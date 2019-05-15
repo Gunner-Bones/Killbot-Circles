@@ -266,4 +266,25 @@ def cleardata(file):
     except: return
     s.truncate(); s.close()
 
+def POINTSFORMULA(data):
+    global DEMONSLIST
+    if data is None: return None
+    # requires data from PLAYERDATA()
+    s = 0
+    for d in data['records']:
+        if int(d['demon']['position']) <= 100:
+            s += (((d['progress'] / 100) ** 5) * (100 / (math.exp(0.03 * (d['demon']['position'] - 1)))))
+    for d in data['verified']:
+        if int(d['position']) <= 100:
+            s += (((100 / 100) ** 5) * (100 / (math.exp(0.03 * (d['position'] - 1)))))
+    return s
 
+def PLAYERDATA(id):
+    if id is None: return None
+    url = "https://pointercrate.com/api/v1/players/" + str(id)
+    rq = urllib.request.Request(url)
+    try: rt = str(urllib.request.urlopen(rq).read())
+    except: return None
+    rt = rt[2:len(rt) - 1]; rt = rt.replace("\\n",""); rt = rt.replace("  ","")
+    rj = json.loads(rt)
+    return rj['data']
