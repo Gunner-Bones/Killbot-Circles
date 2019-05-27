@@ -288,3 +288,83 @@ def PLAYERDATA(id):
     rt = rt[2:len(rt) - 1]; rt = rt.replace("\\n",""); rt = rt.replace("  ","")
     rj = json.loads(rt)
     return rj['data']
+
+def getanylevel(levelname):
+    """
+    :param levelname: (str) Level ID or Name
+    :return: Data about the Level
+    LIST DATA:
+    1 - Level ID
+    3 - Level name
+    54 - Author
+    13 - Downloads
+    19 - Likes
+    35 - Description (Requires decode)
+    39 - Original
+    37 - Length (0:Tiny,1:Short,2:Medium,3:Long,4:XL)
+    27 - Pass
+
+    11 - Difficulty:
+        if 11 is 50:
+            if 21 is 1: Extreme Demon
+            or if 25 is 1: Auto
+            else: Insane
+        if 11 is 40:
+            if 27 is 10: Insane Demon
+            else: Harder
+        if 11 is 30:
+            if 27 is 10: Hard Demon
+            else: Hard
+        if 11 is 20:
+            if 27 is 10: Medium Demon
+            else: Normal
+        if 11 is 10:
+            if 27 is 10: Easy Demon
+            else: Easy
+        if 11 is 0: N/A
+    """
+    url = "http://www.boomlings.com/database/getGJLevels21.php"
+    p = "gameVersion=21&binaryVersion=35&gdw=0&type=0&str=" + levelname + \
+        "&diff=-&len=-&page=0&total=0&uncompleted=0&onlyCompleted=0&featured=0&original=0&twoPlayer=0&coins=0&epic=0" \
+        "&secret=Wmfd2893gb7"
+    p = p.encode()
+    data = urllib.request.urlopen(url, p).read().decode()
+    data = data.split(":")
+
+    if data[0] == "-1": return []
+
+    levelHasOriginal = True
+    if data[39] == "0":
+        levelHasOriginal = False
+    levelLength = "Tiny"
+    if data[37] == "1":
+        levelLength = "Short"
+    elif data[37] == "2":
+        levelLength = "Medium"
+    elif data[37] == "3":
+        levelLength = "Long"
+    elif data[37] == "4":
+        levelLength = "XL"
+    levelDiff = "N/A"
+    if data[11] == "50":
+        if data[21] == "1": levelDiff = "Extreme Demon"
+        elif data[25] == "1": levelDiff = "Auto"
+        else: levelDiff = "Insane"
+    elif data[11] == "40":
+        if data[27] == "10": levelDiff = "Insane Demon"
+        else: levelDiff = "Harder"
+    elif data[11] == "30":
+        if data[27] == "10": levelDiff = "Hard Demon"
+        else: levelDiff = "Hard"
+    elif data[11] == "20":
+        if data[27] == "10": levelDiff = "Medium Demon"
+        else: levelDiff = "Normal"
+    elif data[11] == "10":
+        if data[27] == "10": levelDiff = "Easy Demon"
+        else: levelDiff = "Easy"
+    try:
+        leveldesc = base64.b64decode(str(data[35])).decode()
+    except:
+        leveldesc = ""
+    dl = {"ID":data[1],"Name":data[3],"Author":data[54],"Downloads":data[13],"Likes":data[19],"Description":leveldesc,"Copied":str(levelHasOriginal),"Length":levelLength,"Difficulty":levelDiff}
+    return dl

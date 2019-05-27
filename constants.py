@@ -7,9 +7,27 @@ CHAR_SENT = "📨"
 NM_LINE_USER = "\n**User**: "
 NM_LINE_DEMON = "\n**Demon**: "
 NM_LINE_FEEDBACK = "\n**Feedback**: "
+NM_LINE_ROLES_POINTS = "**Points Roles**\n"
+NM_LINE_ROLES_DEMONS = "**Demons Roles**\n"
+NM_LINE_ROLES_POSITIONAL = "**Positional Roles**\n"
+NM_NI_LINE_USER = "**User ID**: "
+NM_NI_LINE_POINTS = "**List Points**: "
+NM_NI_LINE_COMPLETED = "**Completed Demons**: "
+NM_NI_LINE_VERIFIED = "**Verified Demons**: "
+NM_NI_LINE_HARDEST = "**Hardest Demon**: "
+NM_NI_LINE_BANNED = "**Banned**: "
+NM_NI_LINE_ROLES_POINTS = "**Points Roles**: "
+NM_NI_LINE_ROLES_DEMONS = "**Demons Roles**: "
+NM_NI_LINE_ROLES_POSITIONAL = "**Positional Roles**: "
 
 NM_MESSAGE_FEEDBACK = "New Feedback from "
 
+NM_KEY_INDENT = "\n"
+
+PRESENCE_REFRESH_START = "Refreshing..."
+PRESENCE_REFRESH_CYCLE1 = "Refreshing ["
+PRESENCE_REFRESH_CYCLE2 = " Servers]"
+PRESENCE_REFRESH_FINISH = "Finished Refresh!"
 
 RM_RESPONSE_FAILED = "failed"
 RM_RESPONSE_SUCCESS = "success"
@@ -64,18 +82,32 @@ RM_MESSAGE_FEEDBACK_BANNED = "You are not allowed to send Feedbacks!"
 RM_MESSAGE_FEEDBACKBAN_UNBAN = " has been unbanned from sending Feedbacks!"
 RM_MESSAGE_FEEDBACKBAN_BAN = " has been banned from sending Feedbacks!"
 RM_MESSAGE_NEWDEMONSCHANNEL_SET = "Set a NEW DEMONS CHANNEL to *"
+RM_MESSAGE_REFRESH_START = "__Manual Refresh started__"
+RM_MESSAGE_REFRESH_ACTIVE = "An Auto Refresh is currently in Progress!"
+RM_MESSAGE_REFRSH_OVERRIDE = "Auto Refresh Command Lock overridden."
+RM_MESSAGE_REFRESH_SPOT = "Manual Refresh Started."
 
 
 KEY_MODERATOR = "MODERATOR"
 KEY_FEEDBACKCHANNEL = "FEEDBACKCHANNEL"
 KEY_FEEDBACK = "FEEDBACK"
 KEY_NEWDEMONSCHANNEL = "NEWDEMONSCHANNELS"
+KEY_PID = "PID"
 
 VALUE_REMOVED = "$REMOVED$"
 VALUE_BANNED = "BANNED"
 VALUE_DASH = "-"
 VALUE_SEMICOLON = ";"
 VALUE_NONE = "None"
+VALUE_SLASH = "/"
+VALUE_BRACKET_OPEN = "["
+VALUE_BRACKET_CLOSE = "] "
+VALUE_COLON = ": "
+VALUE_ID = "id"
+VALUE_POINTS = "points"
+VALUE_OLD = "old"
+VALUE_DIF = "dif"
+VALUE_BLANK = ""
 
 
 POINTERCRATE_VALUE_APPROVED = "approved"
@@ -90,6 +122,10 @@ POINTERCRATE_KEY_PROGRESS = "progress"
 POINTERCRATE_KEY_NAME = "name"
 POINTERCRATE_KEY_VERIFIED = "verified"
 POINTERCRATE_KEY_STATUS = "status"
+DISCORD_KEY_FIELDS = "fields"
+DISCORD_KEY_VALUE = "value"
+UGB_KEY_LEVEL = "LevelID: "
+GAL_KEY_DIFFICULTY = "Difficulty"
 
 FILE_PCDATA = "pcdata.txt"
 FILE_PCMODS = "pcmods.txt"
@@ -99,6 +135,7 @@ FILE_PCPOSROLES = "pcposroles.txt"
 FILE_PCFEED = "pcfeed.txt"
 FILE_PCVARS = "pcvars.txt"
 FILE_PCFB = "pcfb.txt"
+FILE_PCPOINTS = "pcpoints.txt"
 
 
 DS_METHOD_GET = "get"
@@ -107,4 +144,8 @@ DS_METHOD_REMOVE = "remove"
 DS_METHOD_CHANGE = "change"
 
 
-SPECIFIC_GUILD_POINTERCRATE = "162862229065039872"
+SPECIFIC_GUILD_POINTERCRATE = 162862229065039872
+SPECIFIC_USER_UGB = 358598636436979713
+SPECIFIC_USER_GB = 172861416364179456
+
+KC_OVERRIDE_REFRESH = "KC_OVERRIDE_REFRESH"
