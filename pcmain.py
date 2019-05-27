@@ -437,34 +437,37 @@ async def feedback(ctx,demon_position,feedback_message):
             if linkedplayer(str(ctx.author.id)) is not None:
                 link_data = PLAYERDATA(linkedplayer(str(ctx.author.id)))
                 if link_data is not None:
-                    feedback_demon_beaten = False
-                    feedback_demon = ""
-                    for demon in DEMONSLIST:
-                        if demon['position'] == demon_position: feedback_demon = demon['name']
-                    for beaten_demon in link_data['records']:
-                        if feedback_demon.lower() == beaten_demon['demon']['name'].lower(): feedback_demon_beaten = True
-                    if feedback_demon_beaten:
-                        if len(feedback_message) >= 1:
-                            wrote_feedback = False
-                            for feedback in alldatakeys(FILE_PCFEED):
-                                feedback_data = datasettings(file=FILE_PCFEED,method=DS_METHOD_GET,line=feedback).split(";")
-                                if feedback_data[0] == linkedplayer(str(ctx.author.id)) and feedback_data[1].lower() == feedback_demon.lower():
-                                    wrote_feedback = True
-                            if not wrote_feedback:
-                                await reportfeedback(ctx.guild.name,ctx.author.name,feedback_demon,feedback_message)
-                                datasettings(file=FILE_PCFEED,method=DS_METHOD_ADD,
-                                             newkey=KEY_FEEDBACK + str(random.randint(10000,99999)),
-                                             newline=linkedplayer(str(ctx.author.id)) + VALUE_SEMICOLON + feedback_demon)
-                                await ResponseMessage(ctx, RM_MESSAGE_FEEDBACK_SENT + feedback_demon +
-                                                      RM_MESSAGE_GENERAL_ENDING_SENT, RM_RESPONSE_SUCCESS)
+                    if datasettings(file=FILE_PCFB,method=DS_METHOD_GET,line=str(ctx.author.id)) is None:
+                        feedback_demon_beaten = False
+                        feedback_demon = ""
+                        for demon in DEMONSLIST:
+                            if demon['position'] == demon_position: feedback_demon = demon['name']
+                        for beaten_demon in link_data['records']:
+                            if feedback_demon.lower() == beaten_demon['demon']['name'].lower(): feedback_demon_beaten = True
+                        if feedback_demon_beaten:
+                            if len(feedback_message) >= 1:
+                                wrote_feedback = False
+                                for feedback in alldatakeys(FILE_PCFEED):
+                                    feedback_data = datasettings(file=FILE_PCFEED,method=DS_METHOD_GET,line=feedback).split(";")
+                                    if feedback_data[0] == linkedplayer(str(ctx.author.id)) and feedback_data[1].lower() == feedback_demon.lower():
+                                        wrote_feedback = True
+                                if not wrote_feedback:
+                                    await reportfeedback(ctx.guild.name,ctx.author.name,feedback_demon,feedback_message)
+                                    datasettings(file=FILE_PCFEED,method=DS_METHOD_ADD,
+                                                 newkey=KEY_FEEDBACK + str(random.randint(10000,99999)),
+                                                 newline=linkedplayer(str(ctx.author.id)) + VALUE_SEMICOLON + feedback_demon)
+                                    await ResponseMessage(ctx, RM_MESSAGE_FEEDBACK_SENT + feedback_demon +
+                                                          RM_MESSAGE_GENERAL_ENDING_SENT, RM_RESPONSE_SUCCESS)
+                                else:
+                                    await ResponseMessage(ctx, RM_MESSAGE_FEEDBACK_ALREADYWRITTEN + feedback_demon +
+                                                          RM_MESSAGE_GENERAL_ENDING_IE, RM_RESPONSE_FAILED)
                             else:
-                                await ResponseMessage(ctx, RM_MESSAGE_FEEDBACK_ALREADYWRITTEN + feedback_demon +
-                                                      RM_MESSAGE_GENERAL_ENDING_IE, RM_RESPONSE_FAILED)
+                                await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDMESSAGE, RM_RESPONSE_FAILED)
                         else:
-                            await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDMESSAGE, RM_RESPONSE_FAILED)
+                            await ResponseMessage(ctx, RM_MESSAGE_FEEDBACK_NOTBEATEN + feedback_demon +
+                                                  RM_MESSAGE_GENERAL_ENDING_IE, RM_RESPONSE_FAILED)
                     else:
-                        await ResponseMessage(ctx, RM_MESSAGE_FEEDBACK_NOTBEATEN + feedback_demon +
-                                              RM_MESSAGE_GENERAL_ENDING_IE, RM_RESPONSE_FAILED)
+                        await ResponseMessage(ctx, RM_MESSAGE_FEEDBACK_BANNED, RM_RESPONSE_FAILED)
                 else:
                     await ResponseMessage(ctx, RM_MESSAGE_GENERAL_PLAYERNOPOINTS, RM_RESPONSE_FAILED)
             else:
@@ -473,6 +476,98 @@ async def feedback(ctx,demon_position,feedback_message):
             await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDDEMONPOSITION, RM_RESPONSE_FAILED)
     else:
         await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDDEMONPOSITION, RM_RESPONSE_FAILED)
+
+@client.command(pass_context=True)
+async def feedbackban(ctx,user_name):
+    if inallowedguild(ctx.guild, ctx.author):
+        if membermoderator(ctx.author):
+            if BotHasPermissions(ctx):
+                ban_user = getmember(ctx.guild,user_name)
+                if ban_user is not None:
+                    if datasettings(file=FILE_PCFB,method=DS_METHOD_GET,line=str(ban_user.id)) is None:
+                        datasettings(file=FILE_PCFB,method=DS_METHOD_ADD,newkey=str(ban_user.id),newvalue=VALUE_BANNED)
+                        await ResponseMessage(ctx, ban_user.name + RM_MESSAGE_FEEDBACKBAN_BAN, RM_RESPONSE_SUCCESS)
+                    else:
+                        datasettings(file=FILE_PCFB,method=DS_METHOD_REMOVE,line=str(ban_user.id))
+                        await ResponseMessage(ctx, ban_user.name + RM_MESSAGE_FEEDBACKBAN_UNBAN, RM_RESPONSE_SUCCESS)
+                else:
+                    await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDUSER, RM_RESPONSE_FAILED)
+            else:
+                await ResponseMessage(ctx, RM_BLANK, RM_RESPONSE_FAILED, RM_PRESET_BOTLACKSPERMS)
+        else:
+            await ResponseMessage(ctx, RM_BLANK, RM_RESPONSE_FAILED, RM_PRESET_AUTHORLACKSPERMS)
+
+@client.command(pass_context=True)
+async def info(ctx,user_name=ctx.author.id):
+    info_user = getmember(ctx.guild,user_name)
+    if info_user is not None:
+        if linkedplayer(info_user.id) is not None:
+            link_data = PLAYERDATA(linkedplayer(info_user.id))
+            if link_data is not None:
+                info_demon_hardest = 999
+                info_roles_point = []
+                info_roles_demon = []
+                info_roles_positional = []
+                info_points = POINTSFORMULA(link_data)
+                info_completed = []
+                info_verified = []
+                info_banned = link_data['banned']
+                # info_completed and info_verified: [Name(str),Type(main|extended|legacy),Progress(int)]
+                for beaten_demon in link_data['records']:
+                    if beaten_demon['demon']['position'] < info_demon_hardest:
+                        if beaten_demon['status'] == POINTERCRATE_VALUE_APPROVED and beaten_demon['progress'] == 100:
+                            info_demon_hardest = beaten_demon['demon']['position']
+                    beaten_demon_type = "legacy"
+                    if beaten_demon['demon']['position'] < 101: beaten_demon_type = "extended"
+                    if beaten_demon['demon']['position'] < 51: beaten_demon_type = "main"
+                    info_completed.append([beaten_demon['demon']['name'],beaten_demon_type,beaten_demon['progress']])
+                for verified_demon in link_data['verified']:
+                    if verified_demon['position'] < info_demon_hardest:
+                        info_demon_hardest = verified_demon['position']
+                    verified_demon_type = POINTERCRATE_VALUE_LEGACY
+                    if verified_demon['demon']['position'] < 101: verified_demon_type = POINTERCRATE_VALUE_EXTENDED
+                    if verified_demon['demon']['position'] < 51: verified_demon_type = POINTERCRATE_VALUE_MAIN
+                    info_verified.append([verified_demon['demon']['name'],verified_demon_type,100])
+                for demon in DEMONSLIST:
+                    if demon['position'] == info_demon_hardest:
+                        info_demon_hardest = demon['name']
+                        break
+                info_text_completed = ""
+                info_text_verified = ""
+                for demon in info_completed:
+                    if demon[2] == 100:
+                        if demon[1] == POINTERCRATE_VALUE_LEGACY: info_text_completed +=
+                if isnumber(info_demon_hardest): info_demon_hardest = "None"
+                for role_point_id in alldatakeys(FILE_PCPROLES):
+                    for user_role in info_user.roles:
+                        if str(user_role.id) == role_point_id: info_roles_point.append(user_role.name)
+                for role_demon_id in alldatakeys(FILE_PCDROLES):
+                    for user_role in info_user.roles:
+                        if str(user_role.id) == role_demon_id: info_roles_demon.append(user_role.name)
+                for role_positional_id in alldatakeys(FILE_PCPOSROLES):
+                    for user_role in info_user.roles:
+                        if str(user_role.id) == role_positional_id: info_roles_positional.append(user_role.name)
+                info_text_point = ""
+                info_text_demon = ""
+                info_text_positional = ""
+                if not info_roles_point: info_text_point = "None"
+                else:
+                    for kc_role in info_roles_point: info_text_point += kc_role + ", "
+                    info_text_point = info_text_point[:len(info_text_point) - 2]
+                if not info_roles_demon: info_text_demon = "None"
+                else:
+                    for kc_role in info_roles_demon: info_text_demon += kc_role + ", "
+                    info_text_demon = info_text_demon[:len(info_text_demon) - 2]
+                if not info_roles_positional: info_text_positional = "None"
+                else:
+                    for kc_role in info_roles_positional: info_text_positional += kc_role + ", "
+                    info_text_positional = info_text_positional[:len(info_text_positional) - 2]
+            else:
+                await ResponseMessage(ctx, RM_MESSAGE_GENERAL_PLAYERNOPOINTS, RM_RESPONSE_FAILED)
+        else:
+            await ResponseMessage(ctx, RM_MESSAGE_GENERAL_NOTLINKED, RM_RESPONSE_FAILED)
+    else:
+        await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDUSER, RM_RESPONSE_FAILED)
 
 
 client.run(SECRET)

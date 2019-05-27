@@ -59,15 +59,25 @@ RM_MESSAGE_EDITPOSITIONALROLE_SET = "* POSITIONAL ROLE position requirement: "
 RM_MESSAGE_FEEDBACK_NOTBEATEN = "You have not beaten *"
 RM_MESSAGE_FEEDBACK_ALREADYWRITTEN = " You have already written Feedback for *"
 RM_MESSAGE_FEEDBACK_SENT = "Feedback for "
+RM_MESSAGE_FEEDBACK_BANNED = "You are not allowed to send Feedbacks!"
+RM_MESSAGE_FEEDBACKBAN_UNBAN = " has been unbanned from sending Feedbacks!"
+RM_MESSAGE_FEEDBACKBAN_BAN = " has been banned from sending Feedbacks!"
+
 
 KEY_MODERATOR = "MODERATOR"
 KEY_FEEDBACKCHANNEL = "FEEDBACKCHANNEL"
 KEY_FEEDBACK = "FEEDBACK"
 
 VALUE_REMOVED = "$REMOVED$"
+VALUE_BANNED = "BANNED"
 VALUE_DASH = "-"
 VALUE_SEMICOLON = ";"
 
+
+POINTERCRATE_VALUE_APPROVED = "approved"
+POINTERCRATE_VALUE_MAIN = "main"
+POINTERCRATE_VALUE_EXTENDED = "extended"
+POINTERCRATE_VALUE_LEGACY = "legacy"
 
 FILE_PCDATA = "pcdata.txt"
 FILE_PCMODS = "pcmods.txt"
@@ -76,6 +86,7 @@ FILE_PCDROLES = "pcdroles.txt"
 FILE_PCPOSROLES = "pcposroles.txt"
 FILE_PCFEED = "pcfeed.txt"
 FILE_PCVARS = "pcvars.txt"
+FILE_PCFB = "pcfb.txt"
 
 
 DS_METHOD_GET = "get"
