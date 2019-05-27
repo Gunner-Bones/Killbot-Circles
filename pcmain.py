@@ -91,7 +91,7 @@ async def on_ready():
     for server in client.guilds:
         if server is not None: sl += server.name + ", "
     print("Connected Guilds: " + sl[:len(sl) - 2])
-    await client.change_presence(activity=discord.Game(name=(DEMONSLIST[random.randint(0, 99)])['name']))
+    await client.change_presence(activity=discord.Game(name=(DEMONSLIST[random.randint(0, 99)])[POINTERCRATE_KEY_NAME]))
 
 @client.command(pass_context=True)
 async def setmoderator(ctx,moderator):
@@ -198,7 +198,7 @@ async def adddemonsrole(ctx,role_name,demons):
                     demons_split = demons.split(",")
                     for demon in demons_split:
                         for list_demon in DEMONSLIST:
-                            if list_demon['name'].lower() == demon.lower(): adr_demons.append(demon)
+                            if list_demon[POINTERCRATE_KEY_NAME].lower() == demon.lower(): adr_demons.append(demon)
                     if adr_demons == demons_split: adr_valid = True
                 if adr_valid:
                     adr_demons_str = ""
@@ -257,7 +257,7 @@ async def editdemonsrole(ctx,role_name,demons):
                     demons_split = demons.split(",")
                     for demon in demons_split:
                         for list_demon in DEMONSLIST:
-                            if list_demon['name'].lower() == demon.lower(): adr_demons.append(demon)
+                            if list_demon[POINTERCRATE_KEY_NAME].lower() == demon.lower(): adr_demons.append(demon)
                     if adr_demons == demons_split: adr_valid = True
                 if adr_valid:
                     adr_demons_str = ""
@@ -291,14 +291,14 @@ async def playerlink(ctx,user_name,player_id):
                         link_user_data = PLAYERDATA(player_id)
                         if link_user_data is not None:
                             player_has_points = True
-                            try: link_user_data['records']
+                            try: link_user_data[POINTERCRATE_KEY_RECORDS]
                             except KeyError: player_has_points = False
                             if player_has_points:
                                 if datasettings(file=FILE_PCDATA,method=DS_METHOD_GET,line=str(link_user.id)) is None:
                                     datasettings(file=FILE_PCDATA,method=DS_METHOD_ADD,newkey=str(link_user.id),newvalue=str(player_id))
                                     await ResponseMessage(ctx, RM_MESSAGE_PLAYERLINK_SET + link_user.name +
                                                           RM_MESSAGE_GENERAL_MIDDLE_TO + str(player_id) +
-                                                          RM_MESSAGE_GENERAL_MIDDLE_PARENTHESESOPEN + link_user_data['name'] +
+                                                          RM_MESSAGE_GENERAL_MIDDLE_PARENTHESESOPEN + link_user_data[POINTERCRATE_KEY_NAME] +
                                                           RM_MESSAGE_GENERAL_MIDDLE_PARENTHESESCLOSE, RM_RESPONSE_SUCCESS)
                                 else:
                                     await ResponseMessage(ctx, RM_MESSAGE_PLAYERLINK_FAILEDEXISTS, RM_RESPONSE_FAILED)
@@ -326,7 +326,7 @@ async def playerunlink(ctx,user_name):
                         link_id = datasettings(file=FILE_PCDATA, method=DS_METHOD_GET, line=str(link_user.id))
                         link_data = PLAYERDATA(link_id)
                         link_name = "No Name"
-                        try: link_name = link_data['name']
+                        try: link_name = link_data[POINTERCRATE_KEY_NAME]
                         except: pass
                         datasettings(file=FILE_PCDATA,method=DS_METHOD_CHANGE, line=str(link_user.id), newvalue=VALUE_REMOVED)
                         await ResponseMessage(ctx, RM_MESSAGE_PLAYERUNLINK_SET + link_user.name +
@@ -441,9 +441,9 @@ async def feedback(ctx,demon_position,feedback_message):
                         feedback_demon_beaten = False
                         feedback_demon = ""
                         for demon in DEMONSLIST:
-                            if demon['position'] == demon_position: feedback_demon = demon['name']
-                        for beaten_demon in link_data['records']:
-                            if feedback_demon.lower() == beaten_demon['demon']['name'].lower(): feedback_demon_beaten = True
+                            if demon[POINTERCRATE_KEY_POSITION] == demon_position: feedback_demon = demon[POINTERCRATE_KEY_NAME]
+                        for beaten_demon in link_data[POINTERCRATE_KEY_RECORDS]:
+                            if feedback_demon.lower() == beaten_demon[POINTERCRATE_KEY_DEMON][POINTERCRATE_KEY_NAME].lower(): feedback_demon_beaten = True
                         if feedback_demon_beaten:
                             if len(feedback_message) >= 1:
                                 wrote_feedback = False
@@ -508,36 +508,44 @@ async def info(ctx,user_name=ctx.author.id):
                 info_roles_point = []
                 info_roles_demon = []
                 info_roles_positional = []
-                info_points = POINTSFORMULA(link_data)
+                info_points = str(POINTSFORMULA(link_data))
                 info_completed = []
                 info_verified = []
-                info_banned = link_data['banned']
+                info_banned = link_data[POINTERCRATE_KEY_BANNED]
                 # info_completed and info_verified: [Name(str),Type(main|extended|legacy),Progress(int)]
-                for beaten_demon in link_data['records']:
-                    if beaten_demon['demon']['position'] < info_demon_hardest:
-                        if beaten_demon['status'] == POINTERCRATE_VALUE_APPROVED and beaten_demon['progress'] == 100:
-                            info_demon_hardest = beaten_demon['demon']['position']
-                    beaten_demon_type = "legacy"
-                    if beaten_demon['demon']['position'] < 101: beaten_demon_type = "extended"
-                    if beaten_demon['demon']['position'] < 51: beaten_demon_type = "main"
-                    info_completed.append([beaten_demon['demon']['name'],beaten_demon_type,beaten_demon['progress']])
-                for verified_demon in link_data['verified']:
-                    if verified_demon['position'] < info_demon_hardest:
-                        info_demon_hardest = verified_demon['position']
+                for beaten_demon in link_data[POINTERCRATE_KEY_RECORDS]:
+                    if beaten_demon[POINTERCRATE_KEY_DEMON][POINTERCRATE_KEY_POSITION] < info_demon_hardest:
+                        if beaten_demon[POINTERCRATE_KEY_STATUS] == POINTERCRATE_VALUE_APPROVED and beaten_demon[POINTERCRATE_KEY_PROGRESS] == 100:
+                            info_demon_hardest = beaten_demon[POINTERCRATE_KEY_DEMON][POINTERCRATE_KEY_POSITION]
+                    beaten_demon_type = POINTERCRATE_VALUE_LEGACY
+                    if beaten_demon[POINTERCRATE_KEY_DEMON][POINTERCRATE_KEY_POSITION] < 101: beaten_demon_type = POINTERCRATE_VALUE_EXTENDED
+                    if beaten_demon[POINTERCRATE_KEY_DEMON][POINTERCRATE_KEY_POSITION] < 51: beaten_demon_type = POINTERCRATE_VALUE_MAIN
+                    info_completed.append([beaten_demon[POINTERCRATE_KEY_DEMON][POINTERCRATE_KEY_NAME],beaten_demon_type,beaten_demon[POINTERCRATE_KEY_PROGRESS]])
+                for verified_demon in link_data[POINTERCRATE_KEY_VERIFIED]:
+                    if verified_demon[POINTERCRATE_KEY_POSITION] < info_demon_hardest:
+                        info_demon_hardest = verified_demon[POINTERCRATE_KEY_POSITION]
                     verified_demon_type = POINTERCRATE_VALUE_LEGACY
-                    if verified_demon['demon']['position'] < 101: verified_demon_type = POINTERCRATE_VALUE_EXTENDED
-                    if verified_demon['demon']['position'] < 51: verified_demon_type = POINTERCRATE_VALUE_MAIN
-                    info_verified.append([verified_demon['demon']['name'],verified_demon_type,100])
+                    if verified_demon[POINTERCRATE_KEY_DEMON][POINTERCRATE_KEY_POSITION] < 101: verified_demon_type = POINTERCRATE_VALUE_EXTENDED
+                    if verified_demon[POINTERCRATE_KEY_DEMON][POINTERCRATE_KEY_POSITION] < 51: verified_demon_type = POINTERCRATE_VALUE_MAIN
+                    info_verified.append([verified_demon[POINTERCRATE_KEY_DEMON][POINTERCRATE_KEY_NAME],verified_demon_type,100])
                 for demon in DEMONSLIST:
-                    if demon['position'] == info_demon_hardest:
-                        info_demon_hardest = demon['name']
+                    if demon[POINTERCRATE_KEY_POSITION] == info_demon_hardest:
+                        info_demon_hardest = demon[POINTERCRATE_KEY_NAME]
                         break
                 info_text_completed = ""
                 info_text_verified = ""
                 for demon in info_completed:
                     if demon[2] == 100:
-                        if demon[1] == POINTERCRATE_VALUE_LEGACY: info_text_completed +=
-                if isnumber(info_demon_hardest): info_demon_hardest = "None"
+                        if demon[1] == POINTERCRATE_VALUE_LEGACY: info_text_completed += "*" + demon[0] + "*, "
+                        elif demon[1] == POINTERCRATE_VALUE_EXTENDED: info_text_completed += demon[0] + ", "
+                        elif demon[1] == POINTERCRATE_VALUE_MAIN: info_text_completed += "__" + demon[0] + "__, "
+                for demon in info_verified:
+                    info_text_verified += demon[0] + ", "
+                if len(info_text_completed) > 0:
+                    info_text_completed = info_text_completed[:len(info_text_completed) - 2]
+                if len(info_text_verified) > 0:
+                    info_text_verified = info_text_verified[:len(info_text_verified) - 2]
+                if isnumber(info_demon_hardest): info_demon_hardest = VALUE_NONE
                 for role_point_id in alldatakeys(FILE_PCPROLES):
                     for user_role in info_user.roles:
                         if str(user_role.id) == role_point_id: info_roles_point.append(user_role.name)
@@ -550,24 +558,61 @@ async def info(ctx,user_name=ctx.author.id):
                 info_text_point = ""
                 info_text_demon = ""
                 info_text_positional = ""
-                if not info_roles_point: info_text_point = "None"
+                if not info_roles_point: info_text_point = VALUE_NONE
                 else:
                     for kc_role in info_roles_point: info_text_point += kc_role + ", "
                     info_text_point = info_text_point[:len(info_text_point) - 2]
-                if not info_roles_demon: info_text_demon = "None"
+                if not info_roles_demon: info_text_demon = VALUE_NONE
                 else:
                     for kc_role in info_roles_demon: info_text_demon += kc_role + ", "
                     info_text_demon = info_text_demon[:len(info_text_demon) - 2]
-                if not info_roles_positional: info_text_positional = "None"
+                if not info_roles_positional: info_text_positional = VALUE_NONE
                 else:
                     for kc_role in info_roles_positional: info_text_positional += kc_role + ", "
                     info_text_positional = info_text_positional[:len(info_text_positional) - 2]
+                info_text = "__User Information for **" + link_data[POINTERCRATE_KEY_NAME] + "**__\n"
+                info_text += "**User ID**: " + str(info_user.id) + "\n"
+                info_text += "**Linked Pointercrate Account**: " + info_user.name + " (ID: " + linkedplayer(info_user.id) + ")\n"
+                info_text += "__Pointercrate Stats__\n"
+                info_text += "**List Points**: " + info_points + "\n"
+                info_text += "**Completed Demons**: " + info_text_completed + "\n"
+                info_text += "**Verified Demons**: " + info_text_verified + "\n"
+                info_text += "**Hardest Demon**: " + info_demon_hardest + "\n"
+                info_text += "**Banned**: " + info_banned + "\n"
+                info_text += "__Server Perks__\n"
+                info_text += "**Points Roles**: " + info_text_point + "\n"
+                info_text += "**Demons Roles**: " + info_text_demon + "\n"
+                info_text += "**Positional Roles**: " + info_text_positional + "\n"
+                await ResponseMessage(ctx, info_text, RM_RESPONSE_SUCCESS)
             else:
                 await ResponseMessage(ctx, RM_MESSAGE_GENERAL_PLAYERNOPOINTS, RM_RESPONSE_FAILED)
         else:
             await ResponseMessage(ctx, RM_MESSAGE_GENERAL_NOTLINKED, RM_RESPONSE_FAILED)
     else:
         await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDUSER, RM_RESPONSE_FAILED)
+
+@client.command(pass_context=True)
+async def setnewdemonschannel(ctx,channel_name):
+    if membermoderator(ctx.author):
+        if BotHasPermissions(ctx):
+            new_demons_channel = getchannel(ctx.guild,channel_name)
+            if new_demons_channel is not None:
+                if datasettings(file=FILE_PCVARS,method=DS_METHOD_GET,line=KEY_NEWDEMONSCHANNEL) is None:
+                    datasettings(file=FILE_PCVARS,method=DS_METHOD_ADD,newkey=KEY_NEWDEMONSCHANNEL,
+                                 newvalue=str(new_demons_channel.id))
+                else:
+                    datasettings(file=FILE_PCVARS, method=DS_METHOD_CHANGE, line=KEY_NEWDEMONSCHANNEL,
+                                 newvalue=str(new_demons_channel.id))
+                await ResponseMessage(ctx, RM_MESSAGE_NEWDEMONSCHANNEL_SET + new_demons_channel.name +
+                                      RM_MESSAGE_GENERAL_ENDING_IE, RM_RESPONSE_SUCCESS)
+            else:
+                await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDCHANNEL, RM_RESPONSE_FAILED)
+        else:
+            await ResponseMessage(ctx,RM_BLANK,RM_RESPONSE_FAILED,RM_PRESET_BOTLACKSPERMS)
+    else:
+        await ResponseMessage(ctx,RM_BLANK,RM_RESPONSE_FAILED,RM_PRESET_AUTHORLACKSPERMS)
+
+
 
 
 client.run(SECRET)
