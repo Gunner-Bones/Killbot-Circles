@@ -19,6 +19,12 @@ NM_NI_LINE_BANNED = "**Banned**: "
 NM_NI_LINE_ROLES_POINTS = "**Points Roles**: "
 NM_NI_LINE_ROLES_DEMONS = "**Demons Roles**: "
 NM_NI_LINE_ROLES_POSITIONAL = "**Positional Roles**: "
+NM_NI_LINE_INFO_POSITIONAL_POSITION = "Position: "
+NM_NI_LINE_INFO_POSITIONAL_REQUIRED = "|Required: "
+NM_NI_TYPE_POINTS = "POINTS"
+NM_NI_TYPE_DEMONS = "DEMONS"
+NM_NI_TYPE_POSITIONAL = "POSITIONAL"
+
 
 NM_MESSAGE_FEEDBACK = "New Feedback from "
 
@@ -86,6 +92,11 @@ RM_MESSAGE_REFRESH_START = "__Manual Refresh started__"
 RM_MESSAGE_REFRESH_ACTIVE = "An Auto Refresh is currently in Progress!"
 RM_MESSAGE_REFRSH_OVERRIDE = "Auto Refresh Command Lock overridden."
 RM_MESSAGE_REFRESH_SPOT = "Manual Refresh Started."
+RM_MESSAGE_WHOHAS_NONE = "No Users have this role!"
+RM_MESSAGE_WHOHAS_SHOW1 = "Showing "
+RM_MESSAGE_WHOHAS_SHOW2 = " Users who have the role "
+RM_MESSAGE_WHOHAS_KC1 = "*This is a "
+RM_MESSAGE_WHOHAS_KC2 = " role, requirements:* "
 
 
 KEY_MODERATOR = "MODERATOR"

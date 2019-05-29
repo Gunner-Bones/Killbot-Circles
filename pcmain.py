@@ -861,13 +861,60 @@ async def kcroles(ctx):
         role_pos = getrole(ctx.guild,role_pos_id)
         count_role_pos = 0
         role_pos_req = datasettings(file=FILE_PCPOSROLES,method=DS_METHOD_GET,line=role_pos_id).split(VALUE_DASH)
-        role_pos_text = "Position: " + role_pos_req[0] + "|Required: " + role_pos_req[1]
+        role_pos_text = NM_NI_LINE_INFO_POSITIONAL_POSITION + role_pos_req[0] + NM_NI_LINE_INFO_POSITIONAL_REQUIRED + \
+                        role_pos_req[1]
         if role_pos is not None:
             for member in ctx.guild.members:
                 if role_pos in member.roles: count_role_pos += 1
             kc_message += VALUE_BRACKET_OPEN + str(count_role_pos) + VALUE_BRACKET_CLOSE + role_pos.name + \
                           VALUE_COLON + role_pos_text + NM_KEY_INDENT
     await ResponseMessage(ctx, kc_message, RM_RESPONSE_SUCCESS)
+
+@client.command(pass_context=True)
+async def whohas(ctx,role_name):
+    if membermoderator(ctx.author):
+        if BotHasPermissions(ctx):
+            wh_role = getrole(ctx.guild, role_name)
+            if wh_role is not None:
+                wh_message = VALUE_BLANK
+                wh_type = None
+                wh_data = None
+                for role_points_id in alldatakeys(FILE_PCPROLES):
+                    if role_points_id == str(wh_role.id):
+                        wh_type = NM_NI_TYPE_POINTS
+                        wh_data = datasettings(file=FILE_PCPROLES,method=DS_METHOD_GET,line=role_points_id)
+                for role_demons_id in alldatakeys(FILE_PCDROLES):
+                    if role_demons_id == str(wh_role.id):
+                        wh_type = NM_NI_TYPE_DEMONS
+                        wh_data = datasettings(file=FILE_PCDROLES,method=DS_METHOD_GET,line=role_demons_id)
+                for role_pos_id in alldatakeys(FILE_PCPOSROLES):
+                    if role_pos_id == str(wh_role.id):
+                        wh_type = NM_NI_TYPE_POSITIONAL
+                        pos_data = datasettings(file=FILE_PCPOSROLES,method=DS_METHOD_GET,line=role_pos_id).split(VALUE_DASH)
+                        wh_data = NM_NI_LINE_INFO_POSITIONAL_POSITION + pos_data[0] + \
+                                  NM_NI_LINE_INFO_POSITIONAL_REQUIRED + pos_data[1]
+                wh_users = VALUE_BLANK
+                wh_count = 0
+                for member in ctx.guild.members:
+                    if wh_role in member.roles:
+                        wh_users += member.name + ", "
+                        wh_count += 1
+                if wh_count == 0:  wh_message = RM_MESSAGE_WHOHAS_NONE
+                else:
+                    wh_users = wh_users[:len(wh_users) - 2]
+                    wh_message = RM_MESSAGE_WHOHAS_SHOW1 + str(wh_count) + RM_MESSAGE_WHOHAS_SHOW2 + wh_role.name + \
+                    VALUE_COLON + NM_KEY_INDENT
+                    if wh_type is not None and wh_data is not None:
+                        wh_message += RM_MESSAGE_WHOHAS_KC1 + wh_type + RM_MESSAGE_WHOHAS_KC2 + wh_data + NM_KEY_INDENT
+                    wh_message += wh_users
+                await ResponseMessage(ctx, wh_message, RM_RESPONSE_SUCCESS)
+            else:
+                await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDROLE, RM_RESPONSE_FAILED)
+        else:
+            await ResponseMessage(ctx, RM_BLANK, RM_RESPONSE_FAILED, RM_PRESET_BOTLACKSPERMS)
+    else:
+        await ResponseMessage(ctx, RM_BLANK, RM_RESPONSE_FAILED, RM_PRESET_AUTHORLACKSPERMS)
+
 
 client.loop.create_task(auto_refresh())
 client.run(SECRET)
