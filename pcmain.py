@@ -6,6 +6,7 @@ from constants import *
 Client = discord.Client()
 bot_prefix= "??"
 client = commands.Bot(command_prefix=bot_prefix)
+client.remove_command("help")
 
 s = None
 try: s = open("pass.txt","r")
@@ -89,8 +90,12 @@ def linkedplayer(uid):
     return None
 
 async def reportfeedback(guild_name,user_name,demon,feedback):
-    feedback_channel = getchannel(getguild(SPECIFIC_GUILD_POINTERCRATE),
-                                  datasettings(file=FILE_PCVARS,method=DS_METHOD_GET,line=KEY_FEEDBACKCHANNEL))
+    feedback_channel_id = datasettings(file=FILE_PCVARS,method=DS_METHOD_GET,line=KEY_FEEDBACKCHANNEL)
+    feedback_channel = None
+    for guild in client.guilds:
+        for channel in guild.channels:
+            if str(channel.id) == feedback_channel_id:
+                feedback_channel = channel
     if feedback_channel is not None:
         await feedback_channel.send(NM_MESSAGE_FEEDBACK + guild_name + NM_LINE_USER + user_name + NM_LINE_DEMON +
                                     demon + NM_LINE_FEEDBACK + feedback)
@@ -476,8 +481,8 @@ async def editpositionalrole(ctx,role_name,base,range):
     else:
         await ResponseMessage(ctx,RM_BLANK,RM_RESPONSE_FAILED,RM_PRESET_AUTHORLACKSPERMS)
 
-client.command(pass_context=True)
-async def feedback(ctx,demon_position,feedback_message):
+@client.command(pass_context=True)
+async def feedback(ctx,demon_position : int,feedback_message):
     global DEMONSLIST
     if isnumber(demon_position):
         if 1 <= demon_position <= len(DEMONSLIST):
@@ -486,7 +491,7 @@ async def feedback(ctx,demon_position,feedback_message):
                 if link_data is not None:
                     if datasettings(file=FILE_PCFB,method=DS_METHOD_GET,line=str(ctx.author.id)) is None:
                         feedback_demon_beaten = False
-                        feedback_demon = ""
+                        feedback_demon = VALUE_BLANK
                         for demon in DEMONSLIST:
                             if demon[POINTERCRATE_KEY_POSITION] == demon_position: feedback_demon = demon[POINTERCRATE_KEY_NAME]
                         for beaten_demon in link_data[POINTERCRATE_KEY_RECORDS]:
@@ -502,7 +507,7 @@ async def feedback(ctx,demon_position,feedback_message):
                                     await reportfeedback(ctx.guild.name,ctx.author.name,feedback_demon,feedback_message)
                                     datasettings(file=FILE_PCFEED,method=DS_METHOD_ADD,
                                                  newkey=KEY_FEEDBACK + str(random.randint(10000,99999)),
-                                                 newline=linkedplayer(str(ctx.author.id)) + VALUE_SEMICOLON + feedback_demon)
+                                                 newvalue=linkedplayer(str(ctx.author.id)) + VALUE_SEMICOLON + feedback_demon)
                                     await ResponseMessage(ctx, RM_MESSAGE_FEEDBACK_SENT + feedback_demon +
                                                           RM_MESSAGE_GENERAL_ENDING_SENT, RM_RESPONSE_SUCCESS)
                                 else:
@@ -876,7 +881,6 @@ async def whohas(ctx,role_name):
         if BotHasPermissions(ctx):
             wh_role = getrole(ctx.guild, role_name)
             if wh_role is not None:
-                wh_message = VALUE_BLANK
                 wh_type = None
                 wh_data = None
                 for role_points_id in alldatakeys(FILE_PCPROLES):
@@ -914,6 +918,54 @@ async def whohas(ctx,role_name):
             await ResponseMessage(ctx, RM_BLANK, RM_RESPONSE_FAILED, RM_PRESET_BOTLACKSPERMS)
     else:
         await ResponseMessage(ctx, RM_BLANK, RM_RESPONSE_FAILED, RM_PRESET_AUTHORLACKSPERMS)
+
+@client.command(pass_context=True)
+async def pointschange(ctx,user_name):
+    pc_user = getmember(ctx.guild,user_name)
+    if pc_user is not None:
+        pc_pid = linkedplayer(pc_user)
+        if pc_pid is not None:
+            pc_data = PLAYERDATA(pc_pid)
+            if pc_data is not None:
+                pc_change = loggedpointschange(pc_data)
+                if pc_change is not None:
+                    if int(pc_change[VALUE_ID]) != 1:
+                        pc_difference = pc_change[VALUE_DIF]
+                        pc_old = int(pc_change[VALUE_OLD])
+                        pc_new = POINTSFORMULA(pc_data)
+                        if pc_old != 0:
+                            await ResponseMessage(ctx, RM_MESSAGE_POINTSCHANGE_OLD + pc_difference +
+                                                  RM_MESSAGE_POINTSCHANGE_NEW + pc_new, RM_RESPONSE_SUCCESS)
+                        else:
+                            await ResponseMessage(ctx, RM_MESSAGE_POINTSCHANGE_NONEW, RM_RESPONSE_FAILED)
+                    else:
+                        await ResponseMessage(ctx, RM_MESSAGE_POINTSCHANGE_NONEW, RM_RESPONSE_FAILED)
+                else:
+                    await ResponseMessage(ctx, RM_MESSAGE_POINTSCHANGE_NONEW, RM_RESPONSE_FAILED)
+            else:
+                await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDPLAYER, RM_RESPONSE_FAILED)
+        else:
+            await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDPLAYER, RM_RESPONSE_FAILED)
+    else:
+        await ResponseMessage(ctx, RM_MESSAGE_GENERAL_INVALIDUSER, RM_RESPONSE_FAILED)
+
+@client.command(pass_context=True)
+async def kchelp(ctx):
+    kc_message1 = VALUE_BLANK
+    kc_message2 = VALUE_BLANK
+    kc_file = open(FILE_PCHELP,F_METHOD_READ)
+    kc_list1 = []
+    kc_stopper1 = 25
+    kc_list2 = []
+    for line in kc_file:
+        kc_stopper1 -= 1
+        if kc_stopper1 <= 0: kc_list2.append(line)
+        else: kc_list1.append(line)
+    for line in kc_list1: kc_message1 += line
+    for line in kc_list2: kc_message2 += line
+    await ctx.author.send(kc_message1)
+    await ctx.author.send(kc_message2)
+    await ctx.message.add_reaction(CHAR_SUCCESS)
 
 
 client.loop.create_task(auto_refresh())

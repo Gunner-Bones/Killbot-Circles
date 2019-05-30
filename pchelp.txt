@@ -1,0 +1,46 @@
+**Killbot Circles Command List**
+*Coded by GunnerBones, Pointercrate system by Stadust*
+*Note: All GLOBAL commands can only be used by Demons List Mods*
+====================================
+__??setmoderator__ role_name - [Admin][LOCAL]
+Sets the role required to use this bot. If none set, defaults to checking if the user has an Admin role.
+__??addpointsrole__ role_name number - [Mod][LOCAL]
+Assigns a point value to a role
+__??removepointsrole__ role_name number - [Mod][LOCAL]
+Removes a points role
+__??playerlink__ user_name player_id - [Pointercrate Mod][GLOBAL]
+Links a Discord User to the global pointercrate players
+__??playerunlink__ user_name player_id - [Pointercrate Mod][GLOBAL]
+Unlinks a Discord User
+__??adddemonsrole__ role_name demon_1_name,demon_2_name - [Mod][LOCAL]
+Assigns demon(s) required to beat/verify (I gotchu tech) for this role
+__??removedemonsrole__ role_name - [Mod][LOCAL]
+Removes a demons role
+__??addpositionalrole__ role_name position_number_requirement number_of_demons - [Mod][LOCAL]
+Assigns a certain Positional demon requirement for a role, and how many in that range required for it.
+__??removepositionalrole__ role_name - [Mod][LOCAL]
+Removes a positional role
+__??refresh__ - [Mod][LOCAL]
+Refreshes the bot to add demons/points roles to players
+Note: Refreshes are bot taxing and take around a couple minutes. Don't try to overload the bot with refreshes.
+====================================
+__??feedback__ demon_position "message" - [Anyone][GLOBAL]
+Sends a feedback back to Pointercrate HQ on what you think of this demon's position. You can only send 1 feedback, and only if you've beaten that demon.
+__??feedbackban__ user_name - [Pointercrate Mod][GLOBAL]
+Toggles Bans/Unbans obnoxious beanys and ozzys from sending stupid feedbacks
+__??info__ user_name - [Anyone][BOTH]
+Gets information about your LOCAL demons/points roles and GLOBAL pointercrate player info
+__??setnewdemonschannel__ channel_name - [Mod][LOCAL]
+Sets a channel where UltimateGDBot sends new demons for this bot to remove anything that isn't a Hard Demon or harder.
+__??editpointsrole__ role_name number - [Mod][LOCAL]
+Changes a Points Role's points number.
+__??editdemonsrole__ demon_name demon1_name,demon2_name - [Mod][LOCAL]
+Changes a Demons Role's demons.
+__??editpositionalrole__ role_name position_number_requirement number_of_demons - [Mod][LOCAL]
+Changes a Positional Role's position requirement and/or number required.
+__??kcroles__ - [Anyone][LOCAL]
+Lists all Points, Demons, and Positional roles for the server.
+__??whohas__ role_name - [Anyone][LOCAL]
+Lists all members with a role (and if it's a Killbot Circles role)
+__??pointschanges__ user_name - [Anyone][GLOBAL]
+Shows points increase/decrease after list changes

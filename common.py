@@ -58,7 +58,7 @@ def getmember(s,mn):
         return discord.utils.find(lambda m: str(mid) in str(m.id), s.members)
     except: return discord.utils.find(lambda m: mn.lower() in m.name.lower(), s.members)
 
-def getglobalmember(m):
+def getglobalmember(m,client):
     for s in client.guilds:
         if str(m).startswith("<@"):
             mid = m.replace("<@",""); mid = mid.replace(">","")
@@ -82,7 +82,7 @@ def getchannel(s,cn):
         return discord.utils.find(lambda m: str(cid) in str(m.id), s.channels)
     except: return discord.utils.find(lambda m: cn.lower() in m.name.lower(), s.channels)
 
-def getguild(sid):
+def getguild(sid,client):
     for guild in client.guilds:
         if str(guild.id) == str(sid): return guild
     return None
