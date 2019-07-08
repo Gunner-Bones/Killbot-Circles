@@ -680,20 +680,21 @@ async def info(ctx,user_name):
                 else:
                     for kc_role in info_roles_positional: info_text_positional += kc_role + ", "
                     info_text_positional = info_text_positional[:len(info_text_positional) - 2]
-                info_text = "\n__User Information for *" + link_data[POINTERCRATE_KEY_NAME] + "*__\n"
-                info_text += NM_NI_LINE_USER + str(info_user.id) + NM_KEY_INDENT
-                info_text += "**Linked Pointercrate Account**: " + info_user.name + " (ID: " + linkedplayer(info_user.id) + ")\n"
-                info_text += "__Pointercrate Stats__\n"
-                info_text += NM_NI_LINE_POINTS + info_points + NM_KEY_INDENT
-                info_text += NM_NI_LINE_COMPLETED + info_text_completed + NM_KEY_INDENT
-                info_text += NM_NI_LINE_VERIFIED + info_text_verified + NM_KEY_INDENT
-                info_text += NM_NI_LINE_HARDEST + info_demon_hardest + NM_KEY_INDENT
-                info_text += NM_NI_LINE_BANNED + str(info_banned) + NM_KEY_INDENT
-                info_text += "__Server Perks__\n"
-                info_text += NM_NI_LINE_ROLES_POINTS + info_text_point + NM_KEY_INDENT
-                info_text += NM_NI_LINE_ROLES_DEMONS + info_text_demon + NM_KEY_INDENT
-                info_text += NM_NI_LINE_ROLES_POSITIONAL + info_text_positional + NM_KEY_INDENT
-                await ResponseMessage(ctx, info_text, RM_RESPONSE_SUCCESS)
+                info_text1 = "\n__User Information for *" + link_data[POINTERCRATE_KEY_NAME] + "*__\n"
+                info_text1 += NM_NI_LINE_USER + str(info_user.id) + NM_KEY_INDENT
+                info_text1 += "**Linked Pointercrate Account**: " + info_user.name + " (ID: " + linkedplayer(info_user.id) + ")\n"
+                info_text1 += "__Pointercrate Stats__\n"
+                info_text1 += NM_NI_LINE_POINTS + info_points + NM_KEY_INDENT
+                info_text1 += NM_NI_LINE_COMPLETED + info_text_completed + NM_KEY_INDENT
+                info_text1 += NM_NI_LINE_VERIFIED + info_text_verified + NM_KEY_INDENT
+                info_text1 += NM_NI_LINE_HARDEST + info_demon_hardest + NM_KEY_INDENT
+                info_text1 += NM_NI_LINE_BANNED + str(info_banned) + NM_KEY_INDENT
+                info_text2 = "__Server Perks__\n"
+                info_text2 += NM_NI_LINE_ROLES_POINTS + info_text_point + NM_KEY_INDENT
+                info_text2 += NM_NI_LINE_ROLES_DEMONS + info_text_demon + NM_KEY_INDENT
+                info_text2 += NM_NI_LINE_ROLES_POSITIONAL + info_text_positional + NM_KEY_INDENT
+                await ResponseMessage(ctx, info_text1, RM_RESPONSE_SUCCESS)
+                await ctx.message.channel.send(info_text2)
             else:
                 await ResponseMessage(ctx, RM_MESSAGE_GENERAL_PLAYERNOPOINTS, RM_RESPONSE_FAILED)
         else:
