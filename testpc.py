@@ -1,11 +1,15 @@
-l1 = [2,45,6,1,78]
-l2 = [23,1,45]
-l = True
-for t2 in l2:
-    if not l: break
-    for t1 in l1:
-        if t1 == t2:
-            l = True
-            break
-        l = False
-print(l)
+import common, asyncio, aiohttp, json
+
+
+
+async def PLAYERDATA(id):
+    if id is None: return None
+    url = "https://pointercrate.com/api/v1/players/" + str(id)
+    async with aiohttp.request("GET",url) as string:
+        string = string[2:len(string) - 1]; string = string.replace("\\n",""); string = string.replace("  ","")
+        data = json.loads(string)
+        print(data['data'])
+        return data['data']
+
+
+

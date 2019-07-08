@@ -20,14 +20,14 @@ SECRET = sl[0]
 DEMONSLIST = []
 REFRESH_ACTIVE = False
 SPOT_REFRESH = False
+SPOT_SERVER = None
 
 NEW_DEMONS_ALLOWED = ["Hard Demon","Insane Demon","Extreme Demon"]
-
 
 def DEMONSLISTREFRESH():
     global DEMONSLIST
     url1 = "https://pointercrate.com/api/v1/demons?limit=100"
-    url2 = "https://pointercrate.com/api/v1/demons?position__gt=101"
+    url2 = "https://pointercrate.com/api/v1/demons?after=100"
     rq1 = urllib.request.Request(url1); rq2 = urllib.request.Request(url2)
     try: rt1 = str(urllib.request.urlopen(rq1).read()); rt2 = str(urllib.request.urlopen(rq2).read())
     except:
@@ -136,13 +136,69 @@ async def on_ready():
     print("Connected Guilds: " + sl[:len(sl) - 2])
     await kc_presence()
 
+NOTIFY_KEYWORDS = [client.command_prefix + POINTERCRATE_COMMAND_ACCEPT,
+                   client.command_prefix + POINTERCRATE_COMMAND_REJECT,
+                   client.command_prefix + POINTERCRATE_COMMAND_ADD,
+                   ALIAS_POINTERCRATE_ACCEPT, ALIAS_POINTERCRATE_REJECT]
+
+NOTIFY_RECORD = None
+
 @client.event
 async def on_message(message):
     global REFRESH_ACTIVE
+    global NOTIFY_KEYWORDS
+    global NOTIFY_RECORD
+    # Refresh
     if message.content.startswith(KC_OVERRIDE_REFRESH) and message.author.id == SPECIFIC_USER_GB:
         REFRESH_ACTIVE = False
-        await ResponseMessage(ctx, RM_MESSAGE_REFRSH_OVERRIDE, RM_RESPONSE_SUCCESS)
-    if REFRESH_ACTIVE: await ResponseMessage(ctx,RM_MESSAGE_REFRESH_ACTIVE,RM_RESPONSE_FAILED)
+        await message.channel.send(RM_MESSAGE_REFRSH_OVERRIDE)
+        await message.add_reaction(CHAR_SUCCESS)
+    if REFRESH_ACTIVE and not message.author.bot and message.content.startswith(client.command_prefix):
+        await message.channel.send(RM_MESSAGE_REFRESH_ACTIVE)
+        await message.add_reaction(CHAR_FAILED)
+    # Notify
+    if message.content.startswith(tuple(NOTIFY_KEYWORDS)): NOTIFY_RECORD = message.author.name
+    if message.author.id == SPECIFIC_USER_DLB and message.guild.id == SPECIFIC_GUILD_POINTERCRATE and NOTIFY_RECORD:
+        notify_message_works = True
+        notify_message_embeds = None
+        try: notify_message_embeds = message.embeds[0].to_dict()
+        except: notify_message_works = False
+        if notify_message_works:
+            notify_message_fields = None
+            try: notify_message_fields = notify_message_embeds[DISCORD_KEY_FIELDS]
+            except: notify_message_works = False
+            if notify_message_works:
+                player_pid = notify_message_fields[1][DISCORD_KEY_VALUE].split(NM_KEY_INDENT)
+                player_pid = player_pid[1].replace(DLB_KEY_PID,VALUE_BLANK)
+                notify_exempt = False
+                for pid in alldatakeys(FILE_PCN):
+                    if datasettings(file=FILE_PCN,method=DS_METHOD_GET,line=pid) == player_pid: notify_exempt = True
+                if not notify_exempt:
+                    user_id = None
+                    for uid in alldatakeys(FILE_PCDATA):
+                        if datasettings(file=FILE_PCDATA,method=DS_METHOD_GET,line=uid) == player_pid: user_id = uid
+                    if user_id:
+                        user_player = getmember(message.guild,user_id)
+                        if user_player is not None:
+                            notify_demon_name = None
+                            notify_demon_progress = None
+                            notify_demon_status = None
+                            try:
+                                notify_demon_name = notify_message_fields[0][DISCORD_KEY_VALUE].split(NM_KEY_INDENT)
+                                notify_demon_name = notify_demon_name[0].replace(DLB_KEY_DEMON,VALUE_BLANK)
+                                notify_description = notify_message_embeds[DLB_KEY_DESCRIPTION].split(NM_KEY_INDENT)
+                                notify_demon_progress = notify_description[1].replace(DLB_KEY_PROGRESS,VALUE_BLANK)
+                                notify_demon_status = notify_description[3].replace(DLB_KEY_STATUS,VALUE_BLANK)
+                            except: notify_message_works = False
+                            if notify_message_works:
+                                notify_message = "__**Notification from the Demons List Team!**__\n"
+                                notify_message += "**" + user_player.name + "**, your record *" + notify_demon_progress + \
+                                "* on __" + notify_demon_name + "__ has been " + notify_demon_status.upper() + "!\n"
+                                notify_message += "`[Record " + notify_demon_status + " by " + NOTIFY_RECORD + "]`\n"
+                                notify_message += "*If you don\'t want to be notified, type ??getnotified*"
+                                await user_player.send(notify_message)
+                                await message.add_reaction(CHAR_SENT)
+
     else: await client.process_commands(message)
 
 @client.command(pass_context=True)
@@ -244,22 +300,24 @@ async def adddemonsrole(ctx,role_name,demons):
                 adr_demons = []
                 adr_valid = False
                 if "," not in demons:
-                    adr_demons = [demons]
+                    adr_demons = [demons.replace("\"","")]
                     adr_valid = True
                 else:
-                    demons_split = demons.split(",")
+                    demons_split = demons.replace("\"","")
+                    demons_split = demons_split.split(",")
                     for demon in demons_split:
                         for list_demon in DEMONSLIST:
-                            if list_demon[POINTERCRATE_KEY_NAME].lower() == demon.lower(): adr_demons.append(demon)
-                    if adr_demons == demons_split: adr_valid = True
+                            if list_demon[POINTERCRATE_KEY_NAME].lower() == demon.lower():
+                                adr_demons.append(demon)
+                    if adr_demons.sort() == demons_split.sort(): adr_valid = True
                 if adr_valid:
                     adr_demons_str = ""
                     for demon in adr_demons: adr_demons_str += demon + ";"
                     adr_demons_str = adr_demons_str[:len(adr_demons_str) - 1]
                     if datasettings(file=FILE_PCDROLES, method=DS_METHOD_GET, line=str(adr_role.id)) is None:
-                        datasettings(file=FILE_PCDROLES, method=DS_METHOD_ADD, newkey=str(adr_role.id), newline=adr_demons_str)
+                        datasettings(file=FILE_PCDROLES, method=DS_METHOD_ADD, newkey=str(adr_role.id), newvalue=adr_demons_str)
                         await ResponseMessage(ctx, RM_MESSAGE_GENERAL_STARTING_SET + adr_role.name +
-                                              RM_MESSAGE_DEMONSROLE_SET + adr_demons_str,RM_RESPONSE_SUCCESS)
+                                              RM_MESSAGE_ADDDEMONSROLE_SET + adr_demons_str,RM_RESPONSE_SUCCESS)
                     else:
                         await ResponseMessage(ctx, RM_MESSAGE_DEMONSROLE_FAILEDEXISTS + adr_role.name +
                                               RM_MESSAGE_GENERAL_ENDING_IE, RM_RESPONSE_FAILED)
@@ -316,7 +374,7 @@ async def editdemonsrole(ctx,role_name,demons):
                     for demon in adr_demons: adr_demons_str += demon + ";"
                     adr_demons_str = adr_demons_str[:len(adr_demons_str) - 1]
                     if datasettings(file=FILE_PCDROLES, method=DS_METHOD_GET, line=str(edr_role.id)) is not None:
-                        datasettings(file=FILE_PCDROLES, method=DS_METHOD_CHANGE, newkey=str(edr_role.id), newline=adr_demons_str)
+                        datasettings(file=FILE_PCDROLES, method=DS_METHOD_CHANGE, newkey=str(edr_role.id), newvalue=adr_demons_str)
                         await ResponseMessage(ctx, RM_MESSAGE_GENERAL_STARTING_SET + edr_role.name +
                                               RM_MESSAGE_DEMONSROLE_SET + adr_demons_str,RM_RESPONSE_SUCCESS)
                     else:
@@ -340,7 +398,7 @@ async def playerlink(ctx,user_name,player_id):
                 link_user = getmember(ctx.guild,user_name)
                 if link_user is not None:
                     if isnumber(player_id):
-                        link_user_data = PLAYERDATA(player_id)
+                        link_user_data = await get_player_data(player_id)
                         if link_user_data is not None:
                             player_has_points = True
                             try: link_user_data[POINTERCRATE_KEY_RECORDS]
@@ -376,7 +434,7 @@ async def playerunlink(ctx,user_name):
                 if link_user is not None:
                     if datasettings(file=FILE_PCDATA, method=DS_METHOD_GET, line=str(link_user.id)) is not None:
                         link_id = datasettings(file=FILE_PCDATA, method=DS_METHOD_GET, line=str(link_user.id))
-                        link_data = PLAYERDATA(link_id)
+                        link_data = await get_player_data(link_id)
                         link_name = "No Name"
                         try: link_name = link_data[POINTERCRATE_KEY_NAME]
                         except: pass
@@ -487,7 +545,7 @@ async def feedback(ctx,demon_position : int,feedback_message):
     if isnumber(demon_position):
         if 1 <= demon_position <= len(DEMONSLIST):
             if linkedplayer(str(ctx.author.id)) is not None:
-                link_data = PLAYERDATA(linkedplayer(str(ctx.author.id)))
+                link_data = await get_player_data(linkedplayer(str(ctx.author.id)))
                 if link_data is not None:
                     if datasettings(file=FILE_PCFB,method=DS_METHOD_GET,line=str(ctx.author.id)) is None:
                         feedback_demon_beaten = False
@@ -554,7 +612,7 @@ async def info(ctx,user_name):
     info_user = getmember(ctx.guild,user_name)
     if info_user is not None:
         if linkedplayer(info_user.id) is not None:
-            link_data = PLAYERDATA(linkedplayer(info_user.id))
+            link_data = await get_player_data(linkedplayer(info_user.id))
             if link_data is not None:
                 info_demon_hardest = 999
                 info_roles_point = []
@@ -570,16 +628,16 @@ async def info(ctx,user_name):
                         if beaten_demon[POINTERCRATE_KEY_STATUS] == POINTERCRATE_VALUE_APPROVED and beaten_demon[POINTERCRATE_KEY_PROGRESS] == 100:
                             info_demon_hardest = beaten_demon[POINTERCRATE_KEY_DEMON][POINTERCRATE_KEY_POSITION]
                     beaten_demon_type = POINTERCRATE_VALUE_LEGACY
-                    if beaten_demon[POINTERCRATE_KEY_DEMON][POINTERCRATE_KEY_POSITION] < 101: beaten_demon_type = POINTERCRATE_VALUE_EXTENDED
-                    if beaten_demon[POINTERCRATE_KEY_DEMON][POINTERCRATE_KEY_POSITION] < 51: beaten_demon_type = POINTERCRATE_VALUE_MAIN
+                    if beaten_demon[POINTERCRATE_KEY_DEMON][POINTERCRATE_KEY_POSITION] < 151: beaten_demon_type = POINTERCRATE_VALUE_EXTENDED
+                    if beaten_demon[POINTERCRATE_KEY_DEMON][POINTERCRATE_KEY_POSITION] < 76: beaten_demon_type = POINTERCRATE_VALUE_MAIN
                     info_completed.append([beaten_demon[POINTERCRATE_KEY_DEMON][POINTERCRATE_KEY_NAME],beaten_demon_type,beaten_demon[POINTERCRATE_KEY_PROGRESS]])
                 for verified_demon in link_data[POINTERCRATE_KEY_VERIFIED]:
                     if verified_demon[POINTERCRATE_KEY_POSITION] < info_demon_hardest:
                         info_demon_hardest = verified_demon[POINTERCRATE_KEY_POSITION]
                     verified_demon_type = POINTERCRATE_VALUE_LEGACY
-                    if verified_demon[POINTERCRATE_KEY_DEMON][POINTERCRATE_KEY_POSITION] < 101: verified_demon_type = POINTERCRATE_VALUE_EXTENDED
-                    if verified_demon[POINTERCRATE_KEY_DEMON][POINTERCRATE_KEY_POSITION] < 51: verified_demon_type = POINTERCRATE_VALUE_MAIN
-                    info_verified.append([verified_demon[POINTERCRATE_KEY_DEMON][POINTERCRATE_KEY_NAME],verified_demon_type,100])
+                    if verified_demon[POINTERCRATE_KEY_POSITION] < 151: verified_demon_type = POINTERCRATE_VALUE_EXTENDED
+                    if verified_demon[POINTERCRATE_KEY_POSITION] < 76: verified_demon_type = POINTERCRATE_VALUE_MAIN
+                    info_verified.append([verified_demon[POINTERCRATE_KEY_NAME],verified_demon_type,100])
                 for demon in DEMONSLIST:
                     if demon[POINTERCRATE_KEY_POSITION] == info_demon_hardest:
                         info_demon_hardest = demon[POINTERCRATE_KEY_NAME]
@@ -670,168 +728,178 @@ async def setnewdemonschannel(ctx,channel_name):
 async def auto_refresh():
     global REFRESH_ACTIVE
     global SPOT_REFRESH
+    global SPOT_SERVER
     while True:
-        if datetime.datetime.now().minute == 0 or SPOT_REFRESH:
-            SPOT_REFRESH = False
+        if (datetime.datetime.now().minute == 0 and datetime.datetime.now().hour % 2 < 0) or SPOT_REFRESH:
+            print("[Refresh] Refresh Started.")
             REFRESH_ACTIVE = True
             await client.change_presence(activity=discord.Game(name=PRESENCE_REFRESH_START))
             DEMONSLISTREFRESH()
             guild_count = 0
             for guild in client.guilds: guild_count += 1
+            if SPOT_REFRESH: guild_count = 1
             guild_iterator = 0
             for guild in client.guilds:
-                await client.change_presence(activity=discord.Game(name=PRESENCE_REFRESH_CYCLE1 + str(guild_iterator) +
-                                                                        VALUE_SLASH + str(guild_count) + PRESENCE_REFRESH_CYCLE2))
-                count_points_add = 0
-                count_points_remove = 0
-                count_demons_add = 0
-                count_demons_remove = 0
-                count_positional_add = 0
-                count_positional_remove = 0
-                count_new_remove = 0
-                if alldatakeys(FILE_PCDATA):
-                    for player_id in alldatakeys(FILE_PCDATA):
-                        player = getmember(guild,player_id)
-                        if player is None: continue
-                        player_pid = datasettings(file=FILE_PCDATA,method=DS_METHOD_GET,line=player_id)
-                        player_data = PLAYERDATA(player_pid)
-                        if player_data is None: continue
-                        # Points Roles & Log Points
-                        for role_points_id in alldatakeys(FILE_PCPROLES):
-                            role_points = getrole(guild,role_points_id)
-                            if role_points is not None:
-                                role_points_req = datasettings(file=FILE_PCPROLES,method=DS_METHOD_GET,line=role_points_id)
-                                if role_points_req == VALUE_REMOVED:
-                                    for member in guild.members:
-                                        if role_points in member.roles:
-                                            try: await player.remove_roles(role_points)
-                                            except discord.errors.Forbidden: continue
-                                            count_points_remove += 1
-                                    datasettings(file=FILE_PCPROLES,method=DS_METHOD_REMOVE,line=role_points_id)
-                                else:
-                                    if role_points_id is not None:
-                                        role_points_req = int(role_points_req)
-                                        player_points = int(POINTSFORMULA(player_data))
-                                        logpoints(player_pid,player_points)
-                                        if player_points >= role_points_req:
-                                            if role_points not in player.roles:
-                                                try: await player.add_roles(role_points)
-                                                except discord.errors.Forbidden: continue
-                                                count_points_add += 1
-                                        else:
-                                            if role_points in player.roles:
+                if not SPOT_REFRESH or (SPOT_REFRESH and SPOT_SERVER == guild):
+
+                    await client.change_presence(activity=discord.Game(name=PRESENCE_REFRESH_CYCLE1 + str(guild_iterator) +
+                                                                            VALUE_SLASH + str(guild_count) + PRESENCE_REFRESH_CYCLE2))
+                    count_points_add = 0
+                    count_points_remove = 0
+                    count_demons_add = 0
+                    count_demons_remove = 0
+                    count_positional_add = 0
+                    count_positional_remove = 0
+                    count_new_remove = 0
+                    if alldatakeys(FILE_PCDATA):
+                        for player_id in alldatakeys(FILE_PCDATA):
+                            player = getmember(guild,player_id)
+                            if player is None: continue
+                            player_pid = datasettings(file=FILE_PCDATA,method=DS_METHOD_GET,line=player_id)
+                            player_data = await get_player_data(player_pid)
+                            if player_data is None: continue
+                            # Points Roles & Log Points
+                            for role_points_id in alldatakeys(FILE_PCPROLES):
+                                role_points = getrole(guild,role_points_id)
+                                if role_points is not None:
+                                    role_points_req = datasettings(file=FILE_PCPROLES,method=DS_METHOD_GET,line=role_points_id)
+                                    if role_points_req == VALUE_REMOVED:
+                                        for member in guild.members:
+                                            if role_points in member.roles:
                                                 try: await player.remove_roles(role_points)
                                                 except discord.errors.Forbidden: continue
                                                 count_points_remove += 1
-                        # Demons Roles
-                        for role_demons_id in alldatakeys(FILE_PCDROLES):
-                            role_demons = getrole(guild,role_demons_id)
-                            if role_demons is not None:
-                                role_demons_list = datasettings(file=FILE_PCDROLES,method=DS_METHOD_GET,line=role_demons_id)
-                                if role_demons_list == VALUE_REMOVED:
-                                    for member in guild.members:
-                                        if role_demons in member.roles:
-                                            try: await member.remove_roles(role_demons)
-                                            except discord.errors.Forbidden: continue
-                                            count_demons_remove += 1
-                                    datasettings(file=FILE_PCDROLES, method=DS_METHOD_REMOVE, line=role_demons_id)
-                                else:
-                                    if role_demons_list is not None:
-                                        role_demons_list = role_demons_list.split(VALUE_SEMICOLON)
-                                        demons_found = True
-                                        for required_demon in role_demons_list:
-                                            if not demons_found: break
-                                            for beaten_demon in player_data[POINTERCRATE_KEY_RECORDS]:
-                                                if beaten_demon[POINTERCRATE_KEY_DEMON][POINTERCRATE_KEY_NAME].lower() == required_demon.lower():
-                                                    demons_found = True
-                                                    break
-                                                demons_found = False
-                                        if not demons_found:
+                                        datasettings(file=FILE_PCPROLES,method=DS_METHOD_REMOVE,line=role_points_id)
+                                    else:
+                                        if role_points_id is not None:
+                                            role_points_req = int(role_points_req)
+                                            player_points = int(POINTSFORMULA(player_data))
+                                            logpoints(player_pid,player_points)
+                                            if player_points >= role_points_req:
+                                                if role_points not in player.roles:
+                                                    try: await player.add_roles(role_points)
+                                                    except discord.errors.Forbidden: continue
+                                                    count_points_add += 1
+                                            else:
+                                                if role_points in player.roles:
+                                                    try: await player.remove_roles(role_points)
+                                                    except discord.errors.Forbidden: continue
+                                                    count_points_remove += 1
+                            # Demons Roles
+                            for role_demons_id in alldatakeys(FILE_PCDROLES):
+                                role_demons = getrole(guild,role_demons_id)
+                                if role_demons is not None:
+                                    role_demons_list = datasettings(file=FILE_PCDROLES,method=DS_METHOD_GET,line=role_demons_id)
+                                    if role_demons_list == VALUE_REMOVED:
+                                        for member in guild.members:
+                                            if role_demons in member.roles:
+                                                try: await member.remove_roles(role_demons)
+                                                except discord.errors.Forbidden: continue
+                                                count_demons_remove += 1
+                                        datasettings(file=FILE_PCDROLES, method=DS_METHOD_REMOVE, line=role_demons_id)
+                                    else:
+                                        if role_demons_list is not None:
+                                            role_demons_list = role_demons_list.split(VALUE_SEMICOLON)
                                             demons_found = True
                                             for required_demon in role_demons_list:
                                                 if not demons_found: break
-                                                for verified_demon in player_data[POINTERCRATE_KEY_VERIFIED]:
-                                                    if verified_demon[POINTERCRATE_KEY_NAME].lower() == required_demon.lower():
+                                                for beaten_demon in player_data[POINTERCRATE_KEY_RECORDS]:
+                                                    if beaten_demon[POINTERCRATE_KEY_DEMON][POINTERCRATE_KEY_NAME].lower() == required_demon.lower() \
+                                                            and beaten_demon[POINTERCRATE_KEY_PROGRESS] == 100:
                                                         demons_found = True
                                                         break
                                                     demons_found = False
-                                        if not demons_found:
-                                            if role_demons not in player.roles:
-                                                try: await player.add_roles(role_demons)
+                                            if not demons_found and len(player_data[POINTERCRATE_KEY_VERIFIED]) >= 1:
+                                                demons_found = True
+                                                for required_demon in role_demons_list:
+                                                    if not demons_found: break
+                                                    for verified_demon in player_data[POINTERCRATE_KEY_VERIFIED]:
+                                                        if verified_demon[POINTERCRATE_KEY_NAME].lower() == required_demon.lower():
+                                                            demons_found = True
+                                                            break
+                                                        demons_found = False
+                                            if demons_found:
+                                                if role_demons not in player.roles:
+                                                    try: await player.add_roles(role_demons)
+                                                    except discord.errors.Forbidden: continue
+                                                    count_demons_add += 1
+                                            else:
+                                                if role_demons in player.roles:
+                                                    try: await player.remove_roles(role_demons)
+                                                    except discord.errors.Forbidden: continue
+                                                    count_demons_remove += 1
+                            # Positonal Roles
+                            for role_pos_id in alldatakeys(FILE_PCPOSROLES):
+                                role_pos = getrole(guild,role_pos_id)
+                                if role_pos is not None:
+                                    role_pos_data = datasettings(file=FILE_PCPOSROLES,method=DS_METHOD_GET,line=role_pos_id)
+                                    if role_pos_data == VALUE_REMOVED:
+                                        for member in guild.members:
+                                            if role_pos in member.roles:
+                                                try: await member.remove_roles(role_pos)
                                                 except discord.errors.Forbidden: continue
-                                                count_demons_add += 1
-                                        else:
-                                            if role_demons in player.roles:
-                                                try: await player.remove_roles(role_demons)
-                                                except discord.errors.Forbidden: continue
-                                                count_demons_remove += 1
-                        # Positonal Roles
-                        for role_pos_id in alldatakeys(FILE_PCPOSROLES):
-                            role_pos = getrole(guild,role_pos_id)
-                            if role_pos is not None:
-                                role_pos_data = datasettings(file=FILE_PCPOSROLES,method=DS_METHOD_GET,line=role_pos_id)
-                                if role_pos_data == VALUE_REMOVED:
-                                    for member in guild.members:
-                                        if role_pos in member.roles:
-                                            try: await member.remove_roles(role_pos)
-                                            except discord.errors.Forbidden: continue
-                                            count_positional_remove += 1
-                                    datasettings(file=FILE_PCPOSROLES, method=DS_METHOD_REMOVE, line=role_pos_id)
-                                else:
-                                    role_pos_data = role_pos_data.split(VALUE_DASH)
-                                    pos_requirement = int(role_pos_data[0])
-                                    pos_number = int(role_pos_data[1])
-                                    demons_found = 0
-                                    for beaten_demon in player_data[POINTERCRATE_KEY_RECORDS]:
-                                        if int(beaten_demon[POINTERCRATE_KEY_DEMON][POINTERCRATE_KEY_POSITION]) \
-                                                <= pos_requirement: demons_found += 1
-                                    for verified_demon in player_data[POINTERCRATE_KEY_VERIFIED]:
-                                        if int(verified_demon[POINTERCRATE_KEY_POSITION]) <= pos_requirement: demons_found += 1
-                                    if demons_found >= pos_number:
-                                        if role_pos not in player.roles:
-                                            try: await player.add_roles(role_pos)
-                                            except discord.errors.Forbidden: continue
-                                            count_positional_add += 1
+                                                count_positional_remove += 1
+                                        datasettings(file=FILE_PCPOSROLES, method=DS_METHOD_REMOVE, line=role_pos_id)
                                     else:
-                                        if role_pos in player.roles:
-                                            try: await player.remove_roles(role_pos)
-                                            except discord.errors.Forbidden: continue
-                                            count_positional_remove += 1
-                        # New Demons Channels
-                        new_channel_list = strtolist(datasettings(file=FILE_PCVARS,method=DS_METHOD_GET,line=KEY_NEWDEMONSCHANNEL))
-                        if len(new_channel_list) > 0:
-                            for new_channel_id in new_channel_list:
-                                for channel in guild.channels:
-                                    if channel.id == new_channel_id:
-                                        delete_message = []
-                                        async for message in channel.history(limit=50):
-                                            if message.author.id == SPECIFIC_USER_UGB and message.created_at > \
-                                                (datetime.datetime.now() - datetime.timedelta(days=13)):
-                                                try: message_embed = message.embeds[0].to_dict()
-                                                except: continue
-                                                for embed_field in message_embed[DISCORD_KEY_FIELDS]:
-                                                    if UGB_KEY_LEVEL in embed_field[DISCORD_KEY_VALUE]:
-                                                        level_id = embed_field[DISCORD_KEY_VALUE].replace(UGB_KEY_LEVEL,VALUE_BLANK)
-                                                        level_data = getanylevel(level_id)
-                                                        if level_data:
-                                                            if level_data[GAL_KEY_DIFFICULTY] not in NEW_DEMONS_ALLOWED:
-                                                                delete_message.append(message)
-                                                                count_new_remove += 1
-                                        await channel.delete_messages(delete_message)
-                guild_iterator += 1
+                                        role_pos_data = role_pos_data.split(VALUE_DASH)
+                                        pos_requirement = int(role_pos_data[0])
+                                        pos_number = int(role_pos_data[1])
+                                        demons_found = 0
+                                        for beaten_demon in player_data[POINTERCRATE_KEY_RECORDS]:
+                                            if int(beaten_demon[POINTERCRATE_KEY_DEMON][POINTERCRATE_KEY_POSITION]) \
+                                                    <= pos_requirement and beaten_demon[POINTERCRATE_KEY_PROGRESS] == 100: demons_found += 1
+                                        for verified_demon in player_data[POINTERCRATE_KEY_VERIFIED]:
+                                            if int(verified_demon[POINTERCRATE_KEY_POSITION]) <= pos_requirement: demons_found += 1
+                                        if demons_found >= pos_number:
+                                            if role_pos not in player.roles:
+                                                try: await player.add_roles(role_pos)
+                                                except discord.errors.Forbidden: continue
+                                                count_positional_add += 1
+                                        else:
+                                            if role_pos in player.roles:
+                                                try: await player.remove_roles(role_pos)
+                                                except discord.errors.Forbidden: continue
+                                                count_positional_remove += 1
+                            # New Demons Channels
+                            new_channel_list = strtolist(datasettings(file=FILE_PCVARS,method=DS_METHOD_GET,line=KEY_NEWDEMONSCHANNEL))
+                            if len(new_channel_list) > 0:
+                                for new_channel_id in new_channel_list:
+                                    for channel in guild.channels:
+                                        if channel.id == new_channel_id:
+                                            delete_message = []
+                                            async for message in channel.history(limit=50):
+                                                if message.author.id == SPECIFIC_USER_UGB and message.created_at > \
+                                                    (datetime.datetime.now() - datetime.timedelta(days=13)):
+                                                    try: message_embed = message.embeds[0].to_dict()
+                                                    except: continue
+                                                    for embed_field in message_embed[DISCORD_KEY_FIELDS]:
+                                                        if UGB_KEY_LEVEL in embed_field[DISCORD_KEY_VALUE]:
+                                                            level_id = embed_field[DISCORD_KEY_VALUE].replace(UGB_KEY_LEVEL,VALUE_BLANK)
+                                                            level_data = getanylevel(level_id)
+                                                            if level_data:
+                                                                if level_data[GAL_KEY_DIFFICULTY] not in NEW_DEMONS_ALLOWED:
+                                                                    delete_message.append(message)
+                                                                    count_new_remove += 1
+                                            await channel.delete_messages(delete_message)
+                    guild_iterator += 1
             await client.change_presence(activity=discord.Game(name=PRESENCE_REFRESH_FINISH))
-            await asyncio.sleep(60)
-            await kc_presence()
+            print("[Refresh] Refresh Finished.")
+            if not SPOT_REFRESH: await asyncio.sleep(60)
+            else: await asyncio.sleep(10)
             REFRESH_ACTIVE = False
+            SPOT_REFRESH = False
+            await kc_presence()
         await asyncio.sleep(10)
 
 @client.command(pass_context=True)
 async def refresh(ctx):
     global SPOT_REFRESH
+    global SPOT_SERVER
     if inallowedguild(ctx.guild, ctx.author):
         if membermoderator(ctx.author):
             if BotHasPermissions(ctx):
                 SPOT_REFRESH = True
+                SPOT_SERVER = ctx.guild
                 await ResponseMessage(ctx, RM_MESSAGE_REFRESH_SPOT, RM_RESPONSE_SUCCESS)
             else:
                 await ResponseMessage(ctx, RM_BLANK, RM_RESPONSE_FAILED, RM_PRESET_BOTLACKSPERMS)
@@ -920,12 +988,12 @@ async def whohas(ctx,role_name):
         await ResponseMessage(ctx, RM_BLANK, RM_RESPONSE_FAILED, RM_PRESET_AUTHORLACKSPERMS)
 
 @client.command(pass_context=True)
-async def pointschange(ctx,user_name):
+async def pointschanges(ctx,user_name):
     pc_user = getmember(ctx.guild,user_name)
     if pc_user is not None:
         pc_pid = linkedplayer(pc_user)
         if pc_pid is not None:
-            pc_data = PLAYERDATA(pc_pid)
+            pc_data = await get_player_data(pc_pid)
             if pc_data is not None:
                 pc_change = loggedpointschange(pc_data)
                 if pc_change is not None:

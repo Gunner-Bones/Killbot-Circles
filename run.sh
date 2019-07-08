@@ -1,2 +1,2 @@
 #!/bin/bash
-python3 pcbot.py
+python3 pcmain.py

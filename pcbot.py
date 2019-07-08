@@ -290,6 +290,7 @@ def DEMONSLISTREFRESH():
     for d1 in rj1: DEMONSLIST.append(d1)
     for d2 in rj2: DEMONSLIST.append(d2)
     print("[Demons List] Top 100 Demons refreshed")
+    print(DEMONSLIST)
 
 
 

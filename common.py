@@ -1,4 +1,4 @@
-import discord, asyncio, sys, os, urllib.request, json, math, random, ast, datetime, base64, time
+import discord, asyncio, sys, os, json, math, random, ast, datetime, base64, time, aiohttp
 from discord.ext import commands
 
 def condensedatetime(d):
@@ -266,7 +266,7 @@ def cleardata(file):
     except: return
     s.truncate(); s.close()
 
-def POINTSFORMULA(data):
+def OLDPOINTSFORMULA(data):
     global DEMONSLIST
     if data is None: return None
     # requires data from PLAYERDATA()
@@ -279,6 +279,27 @@ def POINTSFORMULA(data):
             s += (((100 / 100) ** 5) * (100 / (math.exp(0.03 * (d['position'] - 1)))))
     return s
 
+def POINTSFORMULA(data):
+    global DEMONSLIST
+    if data is None: return None
+    # requires data from PLAYERDATA()
+    # d['progress] d['demon']['position']
+    s = 0
+    for d in data['records']:
+        if d['demon']['position'] <= 150:
+            if int(d['progress']) == 100:
+                dp = 150 * math.exp((1 - d['demon']['position']) / 42)
+                s += dp
+            else:
+                dp = 150 * math.exp((1 - d['demon']['position']) / 42)
+                dp = (dp * (d['progress'] / 100)) / 2.0
+                s += dp
+    for d in data['verified']:
+        if d['position'] <= 150:
+            dp = 150 * math.exp((1 - d['position']) / 42)
+            s += dp
+    return s
+
 def PLAYERDATA(id):
     if id is None: return None
     url = "https://pointercrate.com/api/v1/players/" + str(id)
@@ -288,6 +309,13 @@ def PLAYERDATA(id):
     rt = rt[2:len(rt) - 1]; rt = rt.replace("\\n",""); rt = rt.replace("  ","")
     rj = json.loads(rt)
     return rj['data']
+
+async def get_player_data(pid):
+    if pid is None: return None
+    url = "https://pointercrate.com/api/v1/players/" + str(pid)
+    async with aiohttp.request("GET",url) as response:
+        data = await response.json()
+        return data['data']
 
 def getanylevel(levelname):
     """
