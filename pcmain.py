@@ -148,6 +148,11 @@ async def on_message(message):
     global REFRESH_ACTIVE
     global NOTIFY_KEYWORDS
     global NOTIFY_RECORD
+    # Reactions
+    reaction_adds = []
+    if message.channel.id in LIST_CHANNELS_UDQ: reaction_adds = [CHAR_HAND_UP,CHAR_HAND_DOWN,CHAR_QUESTION]
+    elif message.channel.id in LIST_CHANNELS_UD: reaction_adds = [CHAR_HAND_UP,CHAR_HAND_DOWN]
+    for a_reaction in reaction_adds: await message.add_reaction(a_reaction)
     # Refresh
     if message.content.startswith(KC_OVERRIDE_REFRESH) and message.author.id == SPECIFIC_USER_GB:
         REFRESH_ACTIVE = False
@@ -178,7 +183,7 @@ async def on_message(message):
                     for uid in alldatakeys(FILE_PCDATA):
                         if datasettings(file=FILE_PCDATA,method=DS_METHOD_GET,line=uid) == player_pid: user_id = uid
                     if user_id:
-                        user_player = getmember(message.guild,user_id)
+                        user_player = getglobalmember(user_id,client)
                         if user_player is not None:
                             notify_demon_name = None
                             notify_demon_progress = None
